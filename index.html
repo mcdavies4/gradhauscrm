@@ -23,22 +23,18 @@
   }
   *{box-sizing:border-box;}
   html{
-    height:100%;
+    -webkit-text-size-adjust:100%;
   }
   body{
     margin:0;
-    height:100%;
     overflow-x:hidden;
-    overflow-y:auto;
-    -webkit-overflow-scrolling:touch;
-    overscroll-behavior-y:contain;
     background:var(--paper);
     color:var(--ink);
     font-family:'IBM Plex Sans', 'Segoe UI', Arial, sans-serif;
     -webkit-font-smoothing:antialiased;
   }
   @font-face{}
-  .app{max-width:480px;margin:0 auto;min-height:100%;padding-bottom:110px;position:relative;}
+  .app{max-width:480px;margin:0 auto;min-height:100vh;padding-bottom:110px;position:relative;}
 
   header{
     background:var(--navy);
@@ -337,14 +333,14 @@
   .poster{
     width:320px;
     height:400px;
-    background:var(--navy);
+    background:linear-gradient(160deg, #1a2c47 0%, var(--navy) 55%, #101b2e 100%);
     color:#fff;
     position:relative;
     padding:26px 24px;
     display:flex;
     flex-direction:column;
     font-family:'IBM Plex Sans',sans-serif;
-    border-radius:4px;
+    border-radius:6px;
     overflow:hidden;
     transition:height .15s;
   }
@@ -352,29 +348,64 @@
     height:320px;
     padding:22px 24px;
   }
-  .poster.square .headline{font-size:22px;margin-bottom:10px;}
-  .poster.square .price{font-size:26px;margin-bottom:10px;}
+  .poster.square .headline{font-size:21px;margin-bottom:8px;}
+  .poster.square .price{font-size:24px;margin-bottom:8px;}
+  .poster.square .price-badge{font-size:12px;margin-bottom:8px;}
   .poster.square .specs{margin-bottom:10px;}
-  .poster.square .details{-webkit-line-clamp:3;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden;}
+  .poster.square .details{-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden;}
+  .poster.square .cta-band{margin:10px 0;padding:7px 10px;font-size:11px;}
   .poster.square .footer{padding-top:8px;}
   .poster::before{
     content:'';
     position:absolute;
     top:0;left:0;right:0;
-    height:6px;
+    height:5px;
     background:var(--amber);
   }
   .poster .eyebrow{
-    font-size:12px;
+    font-size:11.5px;
     color:var(--amber);
     font-weight:700;
+    letter-spacing:1px;
     margin-bottom:10px;
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .poster .eyebrow::before{
+    content:'';
+    width:6px;height:6px;
+    background:var(--amber);
+    border-radius:1px;
+    display:inline-block;
   }
   .poster .headline{
     font-family:'Lora',serif;
-    font-size:26px;
-    line-height:1.15;
-    margin:0 0 14px;
+    font-weight:600;
+    font-size:25px;
+    line-height:1.18;
+    margin:0 0 10px;
+  }
+  .poster .price{
+    font-family:'Lora',serif;
+    font-weight:600;
+    font-size:29px;
+    color:var(--amber);
+    margin:0 0 12px;
+    line-height:1.1;
+  }
+  .poster .price span{font-size:13px;color:#fff;font-family:'IBM Plex Sans',sans-serif;font-weight:400;}
+  .poster .price-badge{
+    display:inline-block;
+    font-size:13px;
+    font-weight:600;
+    font-style:italic;
+    color:var(--amber);
+    border:1px solid rgba(193,135,60,0.55);
+    background:rgba(193,135,60,0.12);
+    border-radius:100px;
+    padding:5px 14px;
+    margin:0 0 12px;
   }
   .poster .specs{
     display:flex;
@@ -390,13 +421,11 @@
     font-size:12px;
     font-weight:600;
   }
-  .poster .price{
-    font-family:'Lora',serif;
-    font-size:32px;
-    color:var(--amber);
-    margin:0 0 12px;
+  .poster .spec-chip.highlight{
+    background:var(--amber);
+    border-color:var(--amber);
+    color:var(--navy);
   }
-  .poster .price span{font-size:14px;color:#fff;font-family:'IBM Plex Sans',sans-serif;font-weight:400;}
   .poster .details{
     font-size:13px;
     line-height:1.5;
@@ -404,13 +433,39 @@
     flex:1;
     overflow:hidden;
   }
+  .poster .cta-band{
+    background:rgba(193,135,60,0.14);
+    border:1px solid rgba(193,135,60,0.35);
+    border-radius:8px;
+    padding:9px 12px;
+    font-size:12px;
+    font-weight:600;
+    color:var(--amber-soft);
+    text-align:center;
+    margin:14px 0 4px;
+  }
   .poster .footer{
     border-top:1px solid rgba(255,255,255,0.2);
     padding-top:12px;
     margin-top:auto;
     display:flex;
     justify-content:space-between;
-    align-items:flex-end;
+    align-items:center;
+    gap:10px;
+  }
+  .poster .footer .co-group{display:flex;align-items:center;gap:8px;}
+  .poster .footer .monogram{
+    width:26px;height:26px;
+    border-radius:50%;
+    background:var(--amber);
+    color:var(--navy);
+    font-family:'Lora',serif;
+    font-weight:700;
+    font-size:12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-shrink:0;
   }
   .poster .footer .co{font-family:'Lora',serif;font-size:15px;}
   .poster .footer .contact{font-size:11px;color:var(--slate-light);text-align:right;line-height:1.4;}
@@ -509,13 +564,17 @@
         <h2 class="headline" id="pHeadline">4-Bed HMO — Croydon</h2>
         <p class="price" id="pPrice">£1,650<span>&nbsp;pcm</span></p>
         <div class="specs" id="pSpecs">
-          <span class="spec-chip">4 bed</span>
+          <span class="spec-chip highlight">4 bed</span>
           <span class="spec-chip">HMO</span>
           <span class="spec-chip">Croydon CR0</span>
         </div>
         <p class="details" id="pDetails">En-suite rooms, garden, close to station. DSS considered.</p>
+        <div class="cta-band" id="pCta">Get in touch to find out more</div>
         <div class="footer" id="pFooter">
-          <span class="co" id="pCompany">Grad Haus</span>
+          <div class="co-group">
+            <span class="monogram" id="pMonogram">GH</span>
+            <span class="co" id="pCompany">Grad Haus</span>
+          </div>
           <span class="contact" id="pContact">07876 135951<br>gradhausuk@gmail.com</span>
         </div>
       </div>
@@ -819,24 +878,43 @@ function updatePoster(){
 
   document.getElementById('pEyebrow').textContent = adMode === 'property' ? 'PROPERTY AVAILABLE' : 'PROPERTY WANTED';
   document.getElementById('pHeadline').textContent = headline;
-  document.getElementById('pPrice').innerHTML = price ? `£${price}<span>&nbsp;pcm</span>` : `<span style="font-size:16px;">${adMode==='property' ? 'Rent on request' : 'Budget flexible'}</span>`;
+
+  const pPrice = document.getElementById('pPrice');
+  if(price){
+    pPrice.className = 'price';
+    pPrice.innerHTML = `£${escapeHtml(price)}<span>&nbsp;pcm</span>`;
+  }else{
+    pPrice.className = 'price-badge';
+    pPrice.textContent = adMode === 'property' ? 'Rent on request' : 'Budget flexible';
+  }
 
   const chips = [];
   if(beds) chips.push(`${beds} bed`);
   if(type) chips.push(...type.split(',').map(s => s.trim()).filter(Boolean));
-  document.getElementById('pSpecs').innerHTML = chips.map(c => `<span class="spec-chip">${escapeHtml(c)}</span>`).join('');
+  document.getElementById('pSpecs').innerHTML = chips.map((c, i) =>
+    `<span class="spec-chip${i === 0 ? ' highlight' : ''}">${escapeHtml(c)}</span>`
+  ).join('');
 
   document.getElementById('pDetails').textContent = details;
+
+  document.getElementById('pCta').textContent = adMode === 'property'
+    ? 'Get in touch to arrange a viewing'
+    : 'Get in touch if you can help';
 
   // Company name — optional
   const showCompany = document.getElementById('aShowCompany').checked;
   const company = document.getElementById('aCompany').value.trim();
   const pCompany = document.getElementById('pCompany');
+  const pMonogram = document.getElementById('pMonogram');
   if(showCompany && company){
     pCompany.textContent = company;
     pCompany.style.display = '';
+    const initials = company.split(/\s+/).map(w => w[0]).join('').slice(0,2).toUpperCase();
+    pMonogram.textContent = initials;
+    pMonogram.style.display = '';
   }else{
     pCompany.style.display = 'none';
+    pMonogram.style.display = 'none';
   }
 
   // Contact block — phone and email each optional
@@ -907,86 +985,134 @@ function drawPosterCanvas(mode){
   canvas.width = W; canvas.height = H;
   const ctx = canvas.getContext('2d');
 
-  const NAVY = '#152238', AMBER = '#C1873C', DETAILS = '#D9DFE8', CONTACT = '#8a9bb0';
+  const NAVY = '#152238', AMBER = '#C1873C', AMBER_SOFT = '#F3E3CB', DETAILS = '#D9DFE8', CONTACT = '#8a9bb0';
 
-  // Background
-  ctx.fillStyle = NAVY;
+  // Background — subtle gradient for depth
+  const bg = ctx.createLinearGradient(0, 0, W * 0.4, H);
+  bg.addColorStop(0, '#1a2c47');
+  bg.addColorStop(0.55, NAVY);
+  bg.addColorStop(1, '#101b2e');
+  ctx.fillStyle = bg;
   ctx.fillRect(0, 0, W, H);
   // Top amber bar
   ctx.fillStyle = AMBER;
-  ctx.fillRect(0, 0, W, 20);
+  ctx.fillRect(0, 0, W, 18);
 
   const padX = 81;
-  let y = feed ? 78 : 92;
+  let y = feed ? 74 : 88;
   const maxWidth = W - padX * 2;
+  ctx.textBaseline = 'top';
 
-  // Eyebrow
+  // Eyebrow with small square bullet
   const eyebrow = adMode === 'property' ? 'PROPERTY AVAILABLE' : 'PROPERTY WANTED';
   ctx.fillStyle = AMBER;
-  ctx.font = '700 34px Arial, Helvetica, sans-serif';
-  ctx.textBaseline = 'top';
-  ctx.fillText(eyebrow, padX, y);
-  y += 52;
+  ctx.fillRect(padX, y + 12, 9, 9);
+  ctx.font = '700 32px Arial, Helvetica, sans-serif';
+  ctx.fillText(eyebrow, padX + 20, y);
+  y += 50;
 
   // Headline
   const headline = document.getElementById('aHeadline').value || (adMode === 'property' ? 'Property Available' : 'Property Wanted');
   ctx.fillStyle = '#ffffff';
-  ctx.font = feed ? '600 68px Georgia, "Times New Roman", serif' : '600 80px Georgia, "Times New Roman", serif';
+  ctx.font = feed ? '600 62px Georgia, "Times New Roman", serif' : '600 74px Georgia, "Times New Roman", serif';
   const headlineLines = wrapLines(ctx, headline, maxWidth, feed ? 2 : 3);
-  const headlineLH = feed ? 76 : 90;
+  const headlineLH = feed ? 70 : 84;
   headlineLines.forEach(line => { ctx.fillText(line, padX, y); y += headlineLH; });
-  y += 14;
+  y += 10;
 
-  // Price
+  // Price — numeric gets a bold serif figure, fallback text gets a subdued outlined badge
   const price = document.getElementById('aPrice').value;
-  ctx.fillStyle = AMBER;
-  ctx.font = feed ? '600 78px Georgia, "Times New Roman", serif' : '600 96px Georgia, "Times New Roman", serif';
-  const priceText = price ? `£${price}` : (adMode === 'property' ? 'Rent on request' : 'Budget flexible');
-  ctx.fillText(priceText, padX, y);
   if(price){
+    ctx.fillStyle = AMBER;
+    ctx.font = feed ? '600 68px Georgia, "Times New Roman", serif' : '600 82px Georgia, "Times New Roman", serif';
+    const priceText = `£${price}`;
+    ctx.fillText(priceText, padX, y);
     const priceW = ctx.measureText(priceText).width;
     ctx.fillStyle = '#ffffff';
-    ctx.font = '400 40px Arial, Helvetica, sans-serif';
-    ctx.fillText(' pcm', padX + priceW, y + (feed ? 30 : 38));
+    ctx.font = '400 34px Arial, Helvetica, sans-serif';
+    ctx.fillText(' pcm', padX + priceW, y + (feed ? 26 : 34));
+    y += feed ? 90 : 106;
+  }else{
+    const badgeText = adMode === 'property' ? 'Rent on request' : 'Budget flexible';
+    ctx.font = 'italic 600 30px Georgia, "Times New Roman", serif';
+    const textW = ctx.measureText(badgeText).width;
+    const badgeH = 56, badgePadX = 24;
+    ctx.fillStyle = 'rgba(193,135,60,0.14)';
+    roundRectPath(ctx, padX, y, textW + badgePadX * 2, badgeH, badgeH / 2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(193,135,60,0.55)';
+    ctx.lineWidth = 2;
+    roundRectPath(ctx, padX, y, textW + badgePadX * 2, badgeH, badgeH / 2);
+    ctx.stroke();
+    ctx.fillStyle = AMBER;
+    ctx.fillText(badgeText, padX + badgePadX, y + 13);
+    y += badgeH + 30;
   }
-  y += feed ? 100 : 122;
 
-  // Spec chips
+  // Spec chips — first chip highlighted solid amber, rest outlined
   const beds = document.getElementById('aBeds').value;
   const type = document.getElementById('aType').value;
   const chips = [];
   if(beds) chips.push(`${beds} bed`);
   if(type) chips.push(...type.split(',').map(s => s.trim()).filter(Boolean));
 
-  ctx.font = '600 34px Arial, Helvetica, sans-serif';
+  ctx.font = '600 32px Arial, Helvetica, sans-serif';
   let cx = padX, cy = y;
-  const chipH = 58, chipPadX = 22, chipGap = 14;
-  chips.forEach(label => {
+  const chipH = 56, chipPadX = 22, chipGap = 14;
+  chips.forEach((label, i) => {
     const textW = ctx.measureText(label).width;
     const chipW = textW + chipPadX * 2;
     if(cx + chipW > padX + maxWidth){ cx = padX; cy += chipH + chipGap; }
-    ctx.fillStyle = 'rgba(255,255,255,0.1)';
-    roundRectPath(ctx, cx, cy, chipW, chipH, chipH / 2);
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(255,255,255,0.25)';
-    ctx.lineWidth = 2;
-    roundRectPath(ctx, cx, cy, chipW, chipH, chipH / 2);
-    ctx.stroke();
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText(label, cx + chipPadX, cy + 12);
+    if(i === 0){
+      ctx.fillStyle = AMBER;
+      roundRectPath(ctx, cx, cy, chipW, chipH, chipH / 2);
+      ctx.fill();
+      ctx.fillStyle = NAVY;
+    }else{
+      ctx.fillStyle = 'rgba(255,255,255,0.1)';
+      roundRectPath(ctx, cx, cy, chipW, chipH, chipH / 2);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+      ctx.lineWidth = 2;
+      roundRectPath(ctx, cx, cy, chipW, chipH, chipH / 2);
+      ctx.stroke();
+      ctx.fillStyle = '#ffffff';
+    }
+    ctx.fillText(label, cx + chipPadX, cy + 11);
     cx += chipW + chipGap;
   });
-  y = cy + chipH + 40;
+  if(chips.length) y = cy + chipH + 36;
 
   // Details
   const details = document.getElementById('aDetails').value || (adMode === 'property' ? 'Add key features here.' : 'Add requirements here.');
   ctx.fillStyle = DETAILS;
-  ctx.font = '400 36px Arial, Helvetica, sans-serif';
-  const footerH = 150;
-  const availableH = H - footerH - y;
-  const maxDetailLines = Math.max(1, Math.floor(availableH / 54));
+  ctx.font = '400 34px Arial, Helvetica, sans-serif';
+  const detailLineH = 50;
+  const maxDetailLines = feed ? 3 : 6;
   const detailLines = wrapLines(ctx, details, maxWidth, maxDetailLines);
-  detailLines.forEach(line => { ctx.fillText(line, padX, y); y += 54; });
+  detailLines.forEach(line => { ctx.fillText(line, padX, y); y += detailLineH; });
+  y += 16;
+
+  // CTA band — fills remaining space purposefully instead of leaving it blank
+  const footerH = 150;
+  const ctaText = adMode === 'property' ? 'Get in touch to arrange a viewing' : 'Get in touch if you can help';
+  const ctaH = 64;
+  const ctaMaxY = H - footerH - ctaH - 30;
+  const ctaY = Math.min(y, ctaMaxY);
+  if(ctaY >= y - 40){
+    ctx.font = '600 30px Arial, Helvetica, sans-serif';
+    ctx.fillStyle = 'rgba(193,135,60,0.14)';
+    roundRectPath(ctx, padX, ctaY, maxWidth, ctaH, 10);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(193,135,60,0.35)';
+    ctx.lineWidth = 2;
+    roundRectPath(ctx, padX, ctaY, maxWidth, ctaH, 10);
+    ctx.stroke();
+    ctx.fillStyle = AMBER_SOFT;
+    ctx.textAlign = 'center';
+    ctx.fillText(ctaText, W / 2, ctaY + 18);
+    ctx.textAlign = 'left';
+  }
 
   // Footer
   const footerY = H - footerH + 30;
@@ -1000,10 +1126,22 @@ function drawPosterCanvas(mode){
   const showCompany = document.getElementById('aShowCompany').checked;
   const company = document.getElementById('aCompany').value.trim();
   if(showCompany && company){
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '600 46px Georgia, "Times New Roman", serif';
+    // Monogram badge
+    const initials = company.split(/\s+/).map(w => w[0]).join('').slice(0,2).toUpperCase();
+    const badgeR = 26;
+    ctx.fillStyle = AMBER;
+    ctx.beginPath();
+    ctx.arc(padX + badgeR, footerY + 40, badgeR, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = NAVY;
+    ctx.font = '700 24px Georgia, "Times New Roman", serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(initials, padX + badgeR, footerY + 26);
     ctx.textAlign = 'left';
-    ctx.fillText(company, padX, footerY + 26);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '600 40px Georgia, "Times New Roman", serif';
+    ctx.fillText(company, padX + badgeR * 2 + 16, footerY + 20);
   }
 
   const showPhone = document.getElementById('aShowPhone').checked;
@@ -1016,10 +1154,10 @@ function drawPosterCanvas(mode){
 
   if(contactLines.length){
     ctx.fillStyle = CONTACT;
-    ctx.font = '400 32px Arial, Helvetica, sans-serif';
+    ctx.font = '400 30px Arial, Helvetica, sans-serif';
     ctx.textAlign = 'right';
     let cyy = footerY + 20;
-    contactLines.forEach(line => { ctx.fillText(line, W - padX, cyy); cyy += 40; });
+    contactLines.forEach(line => { ctx.fillText(line, W - padX, cyy); cyy += 38; });
     ctx.textAlign = 'left';
   }
 
