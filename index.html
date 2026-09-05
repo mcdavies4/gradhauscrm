@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grad Haus — Pipeline</title>
+<style>
+  :root{
+    --navy:#152238;
+    --navy-soft:#22344f;
+    --slate:#4c6079;
+    --slate-light:#8a9bb0;
+    --paper:#F4F2ED;
+    --paper-card:#FFFFFF;
+    --line:#DDD9CF;
+    --ink:#1c2230;
+    --amber:#C1873C;
+    --amber-soft:#F3E3CB;
+    --sage:#5E7F63;
+    --sage-soft:#DEE8DD;
+    --rose:#B65C4E;
+    --rose-soft:#F2DDD8;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', 'Segoe UI', Arial, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  @font-face{}
+  .app{max-width:480px;margin:0 auto;min-height:100vh;padding-bottom:100px;}
+
+  header{
+    background:var(--navy);
+    color:#fff;
+    padding:22px 20px 18px;
+    border-bottom:3px solid var(--amber);
+  }
+  header .brand{
+    font-family:'Lora', Georgia, serif;
+    font-size:22px;
+    letter-spacing:0.2px;
+    margin:0 0 2px;
+  }
+  header .sub{
+    color:var(--slate-light);
+    font-size:13px;
+    margin:0;
+  }
+
+  .tabs{
+    display:flex;
+    margin:16px 20px 0;
+    background:var(--paper-card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    overflow:hidden;
+  }
+  .tab{
+    flex:1;
+    text-align:center;
+    padding:11px 6px;
+    font-size:14px;
+    font-weight:600;
+    color:var(--slate);
+    cursor:pointer;
+    border-right:1px solid var(--line);
+    transition:background .15s;
+  }
+  .tab:last-child{border-right:none;}
+  .tab.active{
+    background:var(--navy);
+    color:#fff;
+  }
+
+  .summary{
+    display:flex;
+    gap:10px;
+    padding:14px 20px 4px;
+  }
+  .stat{
+    flex:1;
+    background:var(--paper-card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:10px 12px;
+    text-align:left;
+  }
+  .stat .n{font-size:20px;font-weight:700;font-family:'Lora',serif;}
+  .stat .l{font-size:11px;color:var(--slate);margin-top:2px;}
+  .stat.overdue .n{color:var(--rose);}
+
+  .list{padding:14px 20px;display:flex;flex-direction:column;gap:10px;}
+
+  .card{
+    background:var(--paper-card);
+    border:1px solid var(--line);
+    border-left:4px solid var(--slate-light);
+    border-radius:10px;
+    padding:13px 14px;
+    position:relative;
+  }
+  .card.overdue{border-left-color:var(--rose);}
+  .card.today{border-left-color:var(--amber);}
+  .card.ok{border-left-color:var(--sage);}
+
+  .card-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:8px;
+  }
+  .card-name{font-family:'Lora',serif;font-size:16px;font-weight:600;margin:0;}
+  .card-meta{font-size:12.5px;color:var(--slate);margin-top:2px;}
+  .stage-pill{
+    font-size:11px;
+    padding:3px 8px;
+    border-radius:100px;
+    background:var(--sage-soft);
+    color:var(--sage);
+    white-space:nowrap;
+    font-weight:600;
+  }
+  .followup{
+    margin-top:10px;
+    font-size:12.5px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .followup .when{font-weight:600;}
+  .card.overdue .followup .when{color:var(--rose);}
+  .card.today .followup .when{color:var(--amber);}
+  .card-notes{
+    margin-top:8px;
+    font-size:12.5px;
+    color:var(--slate);
+    line-height:1.4;
+  }
+  .card-actions{
+    display:flex;
+    gap:8px;
+    margin-top:10px;
+  }
+  .card-actions button{
+    flex:1;
+    border:1px solid var(--line);
+    background:var(--paper);
+    border-radius:7px;
+    padding:7px 4px;
+    font-size:12px;
+    font-weight:600;
+    color:var(--navy-soft);
+  }
+  .card-actions button.done{
+    background:var(--navy);
+    color:#fff;
+    border-color:var(--navy);
+  }
+  .card-actions button.del{
+    color:var(--rose);
+    flex:0.6;
+  }
+
+  .empty{
+    text-align:center;
+    padding:40px 20px;
+    color:var(--slate);
+    font-size:14px;
+  }
+  .empty .big{font-family:'Lora',serif;font-size:17px;color:var(--ink);margin-bottom:6px;}
+
+  .fab{
+    position:fixed;
+    bottom:24px;
+    left:50%;
+    transform:translateX(-50%);
+    width:calc(100% - 40px);
+    max-width:440px;
+    background:var(--navy);
+    color:#fff;
+    border:none;
+    border-radius:12px;
+    padding:15px;
+    font-size:15px;
+    font-weight:700;
+    font-family:'IBM Plex Sans',sans-serif;
+    box-shadow:0 6px 20px rgba(21,34,56,0.35);
+  }
+
+  .overlay{
+    position:fixed;inset:0;
+    background:rgba(21,34,56,0.55);
+    display:none;
+    align-items:flex-end;
+    z-index:20;
+  }
+  .overlay.show{display:flex;}
+  .sheet{
+    background:var(--paper);
+    width:100%;
+    max-width:480px;
+    margin:0 auto;
+    border-radius:16px 16px 0 0;
+    padding:20px;
+    max-height:88vh;
+    overflow-y:auto;
+  }
+  .sheet h2{
+    font-family:'Lora',serif;
+    margin:0 0 14px;
+    font-size:19px;
+  }
+  .field{margin-bottom:12px;}
+  .field label{
+    display:block;
+    font-size:12px;
+    color:var(--slate);
+    margin-bottom:4px;
+    font-weight:600;
+  }
+  .field input, .field select, .field textarea{
+    width:100%;
+    padding:10px 11px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    font-size:14px;
+    font-family:inherit;
+    background:#fff;
+    color:var(--ink);
+  }
+  .field textarea{resize:vertical;min-height:60px;}
+  .sheet-row{display:flex;gap:10px;}
+  .sheet-row .field{flex:1;}
+  .sheet-actions{
+    display:flex;
+    gap:10px;
+    margin-top:16px;
+  }
+  .sheet-actions button{
+    flex:1;
+    padding:12px;
+    border-radius:9px;
+    border:none;
+    font-size:14px;
+    font-weight:700;
+  }
+  .sheet-actions .save{background:var(--navy);color:#fff;}
+  .sheet-actions .cancel{background:#fff;border:1px solid var(--line);color:var(--slate);}
+
+  .loading{text-align:center;padding:60px 20px;color:var(--slate);}
+
+  /* --- Ad Maker --- */
+  .ad-wrap{padding:14px 20px 10px;}
+  .ad-toggle{
+    display:flex;
+    gap:8px;
+    margin-bottom:14px;
+  }
+  .ad-toggle button{
+    flex:1;
+    padding:9px 6px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:var(--paper-card);
+    color:var(--slate);
+    font-size:13px;
+    font-weight:600;
+  }
+  .ad-toggle button.active{
+    background:var(--amber);
+    border-color:var(--amber);
+    color:#fff;
+  }
+  .ad-toggle.size button.active{
+    background:var(--navy);
+    border-color:var(--navy);
+  }
+  .ad-form .field{margin-bottom:10px;}
+  .ad-form .sheet-row{display:flex;gap:10px;}
+  .ad-form .sheet-row .field{flex:1;}
+
+  .poster-shell{
+    display:flex;
+    justify-content:center;
+    margin:16px 0 10px;
+    overflow:hidden;
+  }
+  .poster{
+    width:320px;
+    height:400px;
+    background:var(--navy);
+    color:#fff;
+    position:relative;
+    padding:26px 24px;
+    display:flex;
+    flex-direction:column;
+    font-family:'IBM Plex Sans',sans-serif;
+    border-radius:4px;
+    overflow:hidden;
+    transition:height .15s;
+  }
+  .poster.square{
+    height:320px;
+    padding:22px 24px;
+  }
+  .poster.square .headline{font-size:22px;margin-bottom:10px;}
+  .poster.square .price{font-size:26px;margin-bottom:10px;}
+  .poster.square .specs{margin-bottom:10px;}
+  .poster.square .details{-webkit-line-clamp:3;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden;}
+  .poster.square .footer{padding-top:8px;}
+  .poster::before{
+    content:'';
+    position:absolute;
+    top:0;left:0;right:0;
+    height:6px;
+    background:var(--amber);
+  }
+  .poster .eyebrow{
+    font-size:12px;
+    color:var(--amber);
+    font-weight:700;
+    margin-bottom:10px;
+  }
+  .poster .headline{
+    font-family:'Lora',serif;
+    font-size:26px;
+    line-height:1.15;
+    margin:0 0 14px;
+  }
+  .poster .specs{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-bottom:14px;
+  }
+  .poster .spec-chip{
+    background:rgba(255,255,255,0.1);
+    border:1px solid rgba(255,255,255,0.25);
+    border-radius:100px;
+    padding:5px 12px;
+    font-size:12px;
+    font-weight:600;
+  }
+  .poster .price{
+    font-family:'Lora',serif;
+    font-size:32px;
+    color:var(--amber);
+    margin:0 0 12px;
+  }
+  .poster .price span{font-size:14px;color:#fff;font-family:'IBM Plex Sans',sans-serif;font-weight:400;}
+  .poster .details{
+    font-size:13px;
+    line-height:1.5;
+    color:#D9DFE8;
+    flex:1;
+    overflow:hidden;
+  }
+  .poster .footer{
+    border-top:1px solid rgba(255,255,255,0.2);
+    padding-top:12px;
+    margin-top:auto;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+  }
+  .poster .footer .co{font-family:'Lora',serif;font-size:15px;}
+  .poster .footer .contact{font-size:11px;color:var(--slate-light);text-align:right;line-height:1.4;}
+
+  .ad-actions{
+    display:flex;
+    gap:10px;
+    padding:0 20px 20px;
+  }
+  .ad-actions button{
+    flex:1;
+    padding:13px;
+    border-radius:9px;
+    border:none;
+    font-size:14px;
+    font-weight:700;
+  }
+  .ad-actions .download{background:var(--navy);color:#fff;}
+  .ad-actions .reset{background:#fff;border:1px solid var(--line);color:var(--slate);}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <header>
+    <p class="brand">Grad Haus</p>
+    <p class="sub">Landlord &amp; investor pipeline</p>
+  </header>
+
+  <div class="tabs">
+    <div class="tab active" data-type="landlord" id="tabLandlord">Landlords</div>
+    <div class="tab" data-type="investor" id="tabInvestor">Investors</div>
+    <div class="tab" data-type="ads" id="tabAds">Ad Maker</div>
+  </div>
+
+  <div class="summary" id="summary"></div>
+
+  <div class="list" id="list">
+    <div class="loading">Loading pipeline…</div>
+  </div>
+
+  <div class="ad-wrap" id="adWrap" style="display:none;">
+    <div class="ad-toggle">
+      <button id="adTypeProperty" class="active">Property ad — for investors</button>
+    </div>
+    <div class="ad-toggle">
+      <button id="adTypeWanted">Wanted ad — for landlords</button>
+    </div>
+
+    <div class="ad-toggle size">
+      <button id="sizeStory" class="active">Story / WhatsApp (portrait)</button>
+      <button id="sizeFeed">Facebook / Instagram (square)</button>
+    </div>
+
+    <div class="ad-form">
+      <div class="field">
+        <label>Headline</label>
+        <input type="text" id="aHeadline" placeholder="e.g. 4-Bed HMO — Croydon">
+      </div>
+      <div class="sheet-row">
+        <div class="field">
+          <label id="aPriceLabel">Monthly rent</label>
+          <input type="text" id="aPrice" placeholder="e.g. 1,650">
+        </div>
+        <div class="field">
+          <label>Bedrooms</label>
+          <input type="text" id="aBeds" placeholder="e.g. 4">
+        </div>
+      </div>
+      <div class="field">
+        <label>Property type &amp; location</label>
+        <input type="text" id="aType" placeholder="e.g. HMO, Croydon CR0">
+      </div>
+      <div class="field">
+        <label id="aDetailsLabel">Key features / requirements</label>
+        <textarea id="aDetails" placeholder="e.g. En-suite rooms, garden, close to station. DSS considered."></textarea>
+      </div>
+      <div class="field">
+        <label>Contact line</label>
+        <input type="text" id="aContact" placeholder="e.g. 07876 135951 · gradhausuk@gmail.com">
+      </div>
+    </div>
+
+    <div class="poster-shell">
+      <div class="poster" id="posterEl">
+        <p class="eyebrow" id="pEyebrow">PROPERTY AVAILABLE</p>
+        <h2 class="headline" id="pHeadline">4-Bed HMO — Croydon</h2>
+        <p class="price" id="pPrice">£1,650<span>&nbsp;pcm</span></p>
+        <div class="specs" id="pSpecs">
+          <span class="spec-chip">4 bed</span>
+          <span class="spec-chip">HMO</span>
+          <span class="spec-chip">Croydon CR0</span>
+        </div>
+        <p class="details" id="pDetails">En-suite rooms, garden, close to station. DSS considered.</p>
+        <div class="footer">
+          <span class="co">Grad Haus</span>
+          <span class="contact" id="pContact">07876 135951<br>gradhausuk@gmail.com</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="ad-actions">
+      <button class="reset" id="adResetBtn">Clear</button>
+      <button class="download" id="adDownloadBtn">Save image</button>
+    </div>
+  </div>
+
+  <button class="fab" id="addBtn">+ Add contact</button>
+
+  <div class="overlay" id="overlay">
+    <div class="sheet">
+      <h2 id="sheetTitle">Add landlord</h2>
+      <div class="field">
+        <label>Name</label>
+        <input type="text" id="fName" placeholder="e.g. Marcus Reid">
+      </div>
+      <div class="sheet-row">
+        <div class="field">
+          <label>Phone</label>
+          <input type="text" id="fPhone" placeholder="07…">
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input type="text" id="fEmail" placeholder="optional">
+        </div>
+      </div>
+      <div class="sheet-row">
+        <div class="field">
+          <label>Stage</label>
+          <select id="fStage">
+            <option>New lead</option>
+            <option>Contacted</option>
+            <option>Negotiating</option>
+            <option>Under offer</option>
+            <option>Signed</option>
+            <option>Lost</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Next follow-up</label>
+          <input type="date" id="fDate">
+        </div>
+      </div>
+      <div class="field">
+        <label>Property / deal notes</label>
+        <textarea id="fNotes" placeholder="e.g. 3-bed HMO, Croydon. Wants £1,400pcm guaranteed."></textarea>
+      </div>
+      <div class="sheet-actions">
+        <button class="cancel" id="cancelBtn">Cancel</button>
+        <button class="save" id="saveBtn">Save</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+let activeType = 'landlord';
+let editingId = null;
+let contacts = [];
+
+const STORAGE_KEY = 'gradhaus-contacts';
+
+function uid(){ return 'c' + Date.now() + Math.random().toString(36).slice(2,7); }
+
+async function loadContacts(){
+  try{
+    const res = await window.storage.get(STORAGE_KEY, false);
+    contacts = res && res.value ? JSON.parse(res.value) : [];
+  }catch(e){
+    contacts = [];
+  }
+  render();
+}
+
+async function persist(){
+  try{
+    await window.storage.set(STORAGE_KEY, JSON.stringify(contacts), false);
+  }catch(e){
+    console.error('Storage error', e);
+  }
+}
+
+function daysUntil(dateStr){
+  if(!dateStr) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const d = new Date(dateStr); d.setHours(0,0,0,0);
+  return Math.round((d - today) / 86400000);
+}
+
+function formatDate(dateStr){
+  if(!dateStr) return 'No date set';
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('en-GB', {day:'numeric', month:'short'});
+}
+
+function followupStatus(dateStr){
+  const diff = daysUntil(dateStr);
+  if(diff === null) return {cls:'', label:'No follow-up set'};
+  if(diff < 0) return {cls:'overdue', label:`Overdue by ${Math.abs(diff)}d — ${formatDate(dateStr)}`};
+  if(diff === 0) return {cls:'today', label:`Due today`};
+  return {cls:'ok', label:`In ${diff}d — ${formatDate(dateStr)}`};
+}
+
+function render(){
+  const filtered = contacts.filter(c => c.type === activeType);
+  renderSummary(filtered);
+  renderList(filtered);
+}
+
+function renderSummary(list){
+  const overdue = list.filter(c => daysUntil(c.followUp) !== null && daysUntil(c.followUp) < 0).length;
+  const today = list.filter(c => daysUntil(c.followUp) === 0).length;
+  const active = list.filter(c => c.stage !== 'Signed' && c.stage !== 'Lost').length;
+
+  document.getElementById('summary').innerHTML = `
+    <div class="stat overdue"><div class="n">${overdue}</div><div class="l">Overdue</div></div>
+    <div class="stat"><div class="n">${today}</div><div class="l">Due today</div></div>
+    <div class="stat"><div class="n">${active}</div><div class="l">Active</div></div>
+  `;
+}
+
+function renderList(list){
+  const el = document.getElementById('list');
+  if(list.length === 0){
+    const noun = activeType === 'landlord' ? 'landlords' : 'investors';
+    el.innerHTML = `<div class="empty"><div class="big">No ${noun} yet</div>Add your first contact to start tracking follow-ups.</div>`;
+    return;
+  }
+
+  // sort: overdue first, then soonest follow-up, then no date last
+  const sorted = [...list].sort((a,b) => {
+    const da = a.followUp ? daysUntil(a.followUp) : 9999;
+    const db = b.followUp ? daysUntil(b.followUp) : 9999;
+    return da - db;
+  });
+
+  el.innerHTML = sorted.map(c => {
+    const fu = followupStatus(c.followUp);
+    return `
+      <div class="card ${fu.cls}" data-id="${c.id}">
+        <div class="card-top">
+          <div>
+            <p class="card-name">${escapeHtml(c.name)}</p>
+            <div class="card-meta">${escapeHtml(c.phone || '')}${c.phone && c.email ? ' · ' : ''}${escapeHtml(c.email || '')}</div>
+          </div>
+          <span class="stage-pill">${escapeHtml(c.stage)}</span>
+        </div>
+        ${c.notes ? `<div class="card-notes">${escapeHtml(c.notes)}</div>` : ''}
+        <div class="followup">
+          <span>Next follow-up</span>
+          <span class="when">${fu.label}</span>
+        </div>
+        <div class="card-actions">
+          <button class="done" data-action="bump" data-id="${c.id}">Follow up done</button>
+          <button data-action="edit" data-id="${c.id}">Edit</button>
+          <button class="del" data-action="del" data-id="${c.id}">✕</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str || '';
+  return d.innerHTML;
+}
+
+function openSheet(id){
+  editingId = id || null;
+  const c = id ? contacts.find(x => x.id === id) : null;
+  document.getElementById('sheetTitle').textContent = id
+    ? 'Edit contact'
+    : (activeType === 'landlord' ? 'Add landlord' : 'Add investor');
+  document.getElementById('fName').value = c ? c.name : '';
+  document.getElementById('fPhone').value = c ? c.phone : '';
+  document.getElementById('fEmail').value = c ? c.email : '';
+  document.getElementById('fStage').value = c ? c.stage : 'New lead';
+  document.getElementById('fDate').value = c ? (c.followUp || '') : '';
+  document.getElementById('fNotes').value = c ? c.notes : '';
+  document.getElementById('overlay').classList.add('show');
+}
+
+function closeSheet(){
+  document.getElementById('overlay').classList.remove('show');
+  editingId = null;
+}
+
+async function saveContact(){
+  const name = document.getElementById('fName').value.trim();
+  if(!name){ return; }
+  const data = {
+    name,
+    phone: document.getElementById('fPhone').value.trim(),
+    email: document.getElementById('fEmail').value.trim(),
+    stage: document.getElementById('fStage').value,
+    followUp: document.getElementById('fDate').value,
+    notes: document.getElementById('fNotes').value.trim(),
+    type: activeType
+  };
+
+  if(editingId){
+    const idx = contacts.findIndex(c => c.id === editingId);
+    if(idx > -1) contacts[idx] = {...contacts[idx], ...data};
+  }else{
+    contacts.push({id: uid(), ...data});
+  }
+
+  await persist();
+  closeSheet();
+  render();
+}
+
+async function bumpFollowUp(id){
+  const c = contacts.find(x => x.id === id);
+  if(!c) return;
+  const next = new Date();
+  next.setDate(next.getDate() + 7);
+  c.followUp = next.toISOString().slice(0,10);
+  await persist();
+  render();
+}
+
+async function deleteContact(id){
+  contacts = contacts.filter(c => c.id !== id);
+  await persist();
+  render();
+}
+
+function setTab(type){
+  activeType = type;
+  ['tabLandlord','tabInvestor','tabAds'].forEach(id => document.getElementById(id).classList.remove('active'));
+  const pipelineOn = (type === 'landlord' || type === 'investor');
+  document.getElementById('summary').style.display = pipelineOn ? 'flex' : 'none';
+  document.getElementById('list').style.display = pipelineOn ? 'flex' : 'none';
+  document.getElementById('addBtn').style.display = pipelineOn ? 'block' : 'none';
+  document.getElementById('adWrap').style.display = pipelineOn ? 'none' : 'block';
+
+  if(type === 'landlord'){ document.getElementById('tabLandlord').classList.add('active'); render(); }
+  if(type === 'investor'){ document.getElementById('tabInvestor').classList.add('active'); render(); }
+  if(type === 'ads'){ document.getElementById('tabAds').classList.add('active'); }
+}
+
+document.getElementById('tabLandlord').addEventListener('click', () => setTab('landlord'));
+document.getElementById('tabInvestor').addEventListener('click', () => setTab('investor'));
+document.getElementById('tabAds').addEventListener('click', () => setTab('ads'));
+
+/* --- Ad Maker --- */
+let adMode = 'property'; // 'property' or 'wanted'
+
+function setAdMode(mode){
+  adMode = mode;
+  document.getElementById('adTypeProperty').classList.toggle('active', mode === 'property');
+  document.getElementById('adTypeWanted').classList.toggle('active', mode === 'wanted');
+  document.getElementById('aPriceLabel').textContent = mode === 'property' ? 'Monthly rent' : 'Budget / rent range';
+  document.getElementById('aDetailsLabel').textContent = mode === 'property' ? 'Key features' : 'Requirements';
+  document.getElementById('aContact').value = document.getElementById('aContact').value || '07876 135951 · gradhausuk@gmail.com';
+  updatePoster();
+}
+
+document.getElementById('adTypeProperty').addEventListener('click', () => setAdMode('property'));
+document.getElementById('adTypeWanted').addEventListener('click', () => setAdMode('wanted'));
+
+let adSize = 'story'; // 'story' or 'feed'
+
+function setAdSize(size){
+  adSize = size;
+  document.getElementById('sizeStory').classList.toggle('active', size === 'story');
+  document.getElementById('sizeFeed').classList.toggle('active', size === 'feed');
+  document.getElementById('posterEl').classList.toggle('square', size === 'feed');
+}
+
+document.getElementById('sizeStory').addEventListener('click', () => setAdSize('story'));
+document.getElementById('sizeFeed').addEventListener('click', () => setAdSize('feed'));
+
+const adFields = ['aHeadline','aPrice','aBeds','aType','aDetails','aContact'];
+adFields.forEach(id => document.getElementById(id).addEventListener('input', updatePoster));
+
+function updatePoster(){
+  const headline = document.getElementById('aHeadline').value || (adMode === 'property' ? 'Property Available' : 'Property Wanted');
+  const price = document.getElementById('aPrice').value;
+  const beds = document.getElementById('aBeds').value;
+  const type = document.getElementById('aType').value;
+  const details = document.getElementById('aDetails').value || (adMode === 'property' ? 'Add key features here.' : 'Add requirements here.');
+  const contact = document.getElementById('aContact').value || '07876 135951 · gradhausuk@gmail.com';
+
+  document.getElementById('pEyebrow').textContent = adMode === 'property' ? 'PROPERTY AVAILABLE' : 'PROPERTY WANTED';
+  document.getElementById('pHeadline').textContent = headline;
+  document.getElementById('pPrice').innerHTML = price ? `£${price}<span>&nbsp;pcm</span>` : `<span style="font-size:16px;">${adMode==='property' ? 'Rent on request' : 'Budget flexible'}</span>`;
+
+  const chips = [];
+  if(beds) chips.push(`${beds} bed`);
+  if(type) chips.push(...type.split(',').map(s => s.trim()).filter(Boolean));
+  document.getElementById('pSpecs').innerHTML = chips.map(c => `<span class="spec-chip">${escapeHtml(c)}</span>`).join('');
+
+  document.getElementById('pDetails').textContent = details;
+  document.getElementById('pContact').innerHTML = escapeHtml(contact).replace(/·/g, '<br>');
+}
+
+document.getElementById('adResetBtn').addEventListener('click', () => {
+  adFields.forEach(id => document.getElementById(id).value = '');
+  updatePoster();
+});
+
+document.getElementById('adDownloadBtn').addEventListener('click', () => {
+  const poster = document.getElementById('posterEl');
+  html2canvas(poster, {scale: 3, backgroundColor: null}).then(canvas => {
+    const link = document.createElement('a');
+    const headline = (document.getElementById('aHeadline').value || 'grad-haus-ad').toLowerCase().replace(/[^a-z0-9]+/g,'-');
+    link.download = `${headline}-${adSize}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  });
+});
+
+document.getElementById('addBtn').addEventListener('click', () => openSheet(null));
+document.getElementById('cancelBtn').addEventListener('click', closeSheet);
+document.getElementById('saveBtn').addEventListener('click', saveContact);
+
+document.getElementById('list').addEventListener('click', (e) => {
+  const btn = e.target.closest('button');
+  if(!btn) return;
+  const id = btn.dataset.id;
+  const action = btn.dataset.action;
+  if(action === 'edit') openSheet(id);
+  if(action === 'bump') bumpFollowUp(id);
+  if(action === 'del') deleteContact(id);
+});
+
+document.getElementById('aContact').value = '07876 135951 · gradhausuk@gmail.com';
+updatePoster();
+loadContacts();
+</script>
+
+</body>
+</html>
