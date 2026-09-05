@@ -196,6 +196,8 @@
     font-weight:700;
     font-family:'IBM Plex Sans',sans-serif;
     box-shadow:0 6px 20px rgba(21,34,56,0.35);
+    z-index:10;
+    touch-action:manipulation;
   }
 
   .overlay{
@@ -292,6 +294,39 @@
   .ad-form .field{margin-bottom:10px;}
   .ad-form .sheet-row{display:flex;gap:10px;}
   .ad-form .sheet-row .field{flex:1;}
+  .toggle-field{
+    background:var(--paper-card);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:10px 12px;
+  }
+  .toggle-field .check-label{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--navy-soft);
+    margin-bottom:7px;
+    cursor:pointer;
+  }
+  .toggle-field .check-label input[type="checkbox"]{
+    width:15px;
+    height:15px;
+    accent-color:var(--navy);
+  }
+  .toggle-field input[type="text"]{
+    width:100%;
+    padding:8px 10px;
+    border:1px solid var(--line);
+    border-radius:7px;
+    font-size:13px;
+    background:#fff;
+  }
+  .toggle-field.disabled input[type="text"]{
+    opacity:0.45;
+    background:var(--paper);
+  }
 
   .poster-shell{
     display:flex;
@@ -453,9 +488,18 @@
         <label id="aDetailsLabel">Key features / requirements</label>
         <textarea id="aDetails" placeholder="e.g. En-suite rooms, garden, close to station. DSS considered."></textarea>
       </div>
-      <div class="field">
-        <label>Contact line</label>
-        <input type="text" id="aContact" placeholder="e.g. 07876 135951 · gradhausuk@gmail.com">
+
+      <div class="field toggle-field">
+        <label class="check-label"><input type="checkbox" id="aShowCompany" checked> Show company name</label>
+        <input type="text" id="aCompany" placeholder="Grad Haus" value="Grad Haus">
+      </div>
+      <div class="field toggle-field">
+        <label class="check-label"><input type="checkbox" id="aShowPhone" checked> Show phone number</label>
+        <input type="text" id="aPhone" placeholder="07876 135951" value="07876 135951">
+      </div>
+      <div class="field toggle-field">
+        <label class="check-label"><input type="checkbox" id="aShowEmail" checked> Show email</label>
+        <input type="text" id="aEmail" placeholder="gradhausuk@gmail.com" value="gradhausuk@gmail.com">
       </div>
     </div>
 
@@ -470,8 +514,8 @@
           <span class="spec-chip">Croydon CR0</span>
         </div>
         <p class="details" id="pDetails">En-suite rooms, garden, close to station. DSS considered.</p>
-        <div class="footer">
-          <span class="co">Grad Haus</span>
+        <div class="footer" id="pFooter">
+          <span class="co" id="pCompany">Grad Haus</span>
           <span class="contact" id="pContact">07876 135951<br>gradhausuk@gmail.com</span>
         </div>
       </div>
@@ -532,7 +576,6 @@
 
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 let activeType = 'landlord';
 let editingId = null;
@@ -734,7 +777,6 @@ function setAdMode(mode){
   document.getElementById('adTypeWanted').classList.toggle('active', mode === 'wanted');
   document.getElementById('aPriceLabel').textContent = mode === 'property' ? 'Monthly rent' : 'Budget / rent range';
   document.getElementById('aDetailsLabel').textContent = mode === 'property' ? 'Key features' : 'Requirements';
-  document.getElementById('aContact').value = document.getElementById('aContact').value || '07876 135951 · gradhausuk@gmail.com';
   updatePoster();
 }
 
@@ -753,8 +795,20 @@ function setAdSize(size){
 document.getElementById('sizeStory').addEventListener('click', () => setAdSize('story'));
 document.getElementById('sizeFeed').addEventListener('click', () => setAdSize('feed'));
 
-const adFields = ['aHeadline','aPrice','aBeds','aType','aDetails','aContact'];
+const adFields = ['aHeadline','aPrice','aBeds','aType','aDetails','aCompany','aPhone','aEmail'];
 adFields.forEach(id => document.getElementById(id).addEventListener('input', updatePoster));
+
+const adToggles = ['aShowCompany','aShowPhone','aShowEmail'];
+adToggles.forEach(id => document.getElementById(id).addEventListener('change', () => {
+  syncToggleStates();
+  updatePoster();
+}));
+
+function syncToggleStates(){
+  document.getElementById('aCompany').closest('.toggle-field').classList.toggle('disabled', !document.getElementById('aShowCompany').checked);
+  document.getElementById('aPhone').closest('.toggle-field').classList.toggle('disabled', !document.getElementById('aShowPhone').checked);
+  document.getElementById('aEmail').closest('.toggle-field').classList.toggle('disabled', !document.getElementById('aShowEmail').checked);
+}
 
 function updatePoster(){
   const headline = document.getElementById('aHeadline').value || (adMode === 'property' ? 'Property Available' : 'Property Wanted');
@@ -762,7 +816,6 @@ function updatePoster(){
   const beds = document.getElementById('aBeds').value;
   const type = document.getElementById('aType').value;
   const details = document.getElementById('aDetails').value || (adMode === 'property' ? 'Add key features here.' : 'Add requirements here.');
-  const contact = document.getElementById('aContact').value || '07876 135951 · gradhausuk@gmail.com';
 
   document.getElementById('pEyebrow').textContent = adMode === 'property' ? 'PROPERTY AVAILABLE' : 'PROPERTY WANTED';
   document.getElementById('pHeadline').textContent = headline;
@@ -774,7 +827,33 @@ function updatePoster(){
   document.getElementById('pSpecs').innerHTML = chips.map(c => `<span class="spec-chip">${escapeHtml(c)}</span>`).join('');
 
   document.getElementById('pDetails').textContent = details;
-  document.getElementById('pContact').innerHTML = escapeHtml(contact).replace(/·/g, '<br>');
+
+  // Company name — optional
+  const showCompany = document.getElementById('aShowCompany').checked;
+  const company = document.getElementById('aCompany').value.trim();
+  const pCompany = document.getElementById('pCompany');
+  if(showCompany && company){
+    pCompany.textContent = company;
+    pCompany.style.display = '';
+  }else{
+    pCompany.style.display = 'none';
+  }
+
+  // Contact block — phone and email each optional
+  const showPhone = document.getElementById('aShowPhone').checked;
+  const showEmail = document.getElementById('aShowEmail').checked;
+  const phone = document.getElementById('aPhone').value.trim();
+  const email = document.getElementById('aEmail').value.trim();
+  const contactLines = [];
+  if(showPhone && phone) contactLines.push(escapeHtml(phone));
+  if(showEmail && email) contactLines.push(escapeHtml(email));
+  const pContact = document.getElementById('pContact');
+  pContact.innerHTML = contactLines.join('<br>');
+  pContact.style.display = contactLines.length ? '' : 'none';
+
+  // If everything in the footer is hidden, collapse the footer entirely
+  const pFooter = document.getElementById('pFooter');
+  pFooter.style.display = (pCompany.style.display === 'none' && pContact.style.display === 'none') ? 'none' : 'flex';
 }
 
 document.getElementById('adResetBtn').addEventListener('click', () => {
@@ -782,15 +861,178 @@ document.getElementById('adResetBtn').addEventListener('click', () => {
   updatePoster();
 });
 
-document.getElementById('adDownloadBtn').addEventListener('click', () => {
-  const poster = document.getElementById('posterEl');
-  html2canvas(poster, {scale: 3, backgroundColor: null}).then(canvas => {
-    const link = document.createElement('a');
-    const headline = (document.getElementById('aHeadline').value || 'grad-haus-ad').toLowerCase().replace(/[^a-z0-9]+/g,'-');
-    link.download = `${headline}-${adSize}.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
+function wrapLines(ctx, text, maxWidth, maxLines){
+  const words = (text || '').split(/\s+/).filter(Boolean);
+  const lines = [];
+  let current = '';
+  for(const w of words){
+    const test = current ? current + ' ' + w : w;
+    if(ctx.measureText(test).width > maxWidth && current){
+      lines.push(current);
+      current = w;
+      if(lines.length === maxLines) break;
+    }else{
+      current = test;
+    }
+  }
+  if(lines.length < maxLines && current) lines.push(current);
+  if(words.length && lines.length === maxLines){
+    // truncate last line with ellipsis if there's more text than fits
+    const usedWords = lines.join(' ').split(/\s+/).length;
+    if(usedWords < words.length){
+      let last = lines[maxLines - 1];
+      while(ctx.measureText(last + '…').width > maxWidth && last.length > 1){
+        last = last.slice(0, -1);
+      }
+      lines[maxLines - 1] = last + '…';
+    }
+  }
+  return lines;
+}
+
+function roundRectPath(ctx, x, y, w, h, r){
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function drawPosterCanvas(mode){
+  const feed = mode === 'feed';
+  const W = 1080, H = feed ? 1080 : 1350;
+  const canvas = document.createElement('canvas');
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  const NAVY = '#152238', AMBER = '#C1873C', DETAILS = '#D9DFE8', CONTACT = '#8a9bb0';
+
+  // Background
+  ctx.fillStyle = NAVY;
+  ctx.fillRect(0, 0, W, H);
+  // Top amber bar
+  ctx.fillStyle = AMBER;
+  ctx.fillRect(0, 0, W, 20);
+
+  const padX = 81;
+  let y = feed ? 78 : 92;
+  const maxWidth = W - padX * 2;
+
+  // Eyebrow
+  const eyebrow = adMode === 'property' ? 'PROPERTY AVAILABLE' : 'PROPERTY WANTED';
+  ctx.fillStyle = AMBER;
+  ctx.font = '700 34px Arial, Helvetica, sans-serif';
+  ctx.textBaseline = 'top';
+  ctx.fillText(eyebrow, padX, y);
+  y += 52;
+
+  // Headline
+  const headline = document.getElementById('aHeadline').value || (adMode === 'property' ? 'Property Available' : 'Property Wanted');
+  ctx.fillStyle = '#ffffff';
+  ctx.font = feed ? '600 68px Georgia, "Times New Roman", serif' : '600 80px Georgia, "Times New Roman", serif';
+  const headlineLines = wrapLines(ctx, headline, maxWidth, feed ? 2 : 3);
+  const headlineLH = feed ? 76 : 90;
+  headlineLines.forEach(line => { ctx.fillText(line, padX, y); y += headlineLH; });
+  y += 14;
+
+  // Price
+  const price = document.getElementById('aPrice').value;
+  ctx.fillStyle = AMBER;
+  ctx.font = feed ? '600 78px Georgia, "Times New Roman", serif' : '600 96px Georgia, "Times New Roman", serif';
+  const priceText = price ? `£${price}` : (adMode === 'property' ? 'Rent on request' : 'Budget flexible');
+  ctx.fillText(priceText, padX, y);
+  if(price){
+    const priceW = ctx.measureText(priceText).width;
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '400 40px Arial, Helvetica, sans-serif';
+    ctx.fillText(' pcm', padX + priceW, y + (feed ? 30 : 38));
+  }
+  y += feed ? 100 : 122;
+
+  // Spec chips
+  const beds = document.getElementById('aBeds').value;
+  const type = document.getElementById('aType').value;
+  const chips = [];
+  if(beds) chips.push(`${beds} bed`);
+  if(type) chips.push(...type.split(',').map(s => s.trim()).filter(Boolean));
+
+  ctx.font = '600 34px Arial, Helvetica, sans-serif';
+  let cx = padX, cy = y;
+  const chipH = 58, chipPadX = 22, chipGap = 14;
+  chips.forEach(label => {
+    const textW = ctx.measureText(label).width;
+    const chipW = textW + chipPadX * 2;
+    if(cx + chipW > padX + maxWidth){ cx = padX; cy += chipH + chipGap; }
+    ctx.fillStyle = 'rgba(255,255,255,0.1)';
+    roundRectPath(ctx, cx, cy, chipW, chipH, chipH / 2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+    ctx.lineWidth = 2;
+    roundRectPath(ctx, cx, cy, chipW, chipH, chipH / 2);
+    ctx.stroke();
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(label, cx + chipPadX, cy + 12);
+    cx += chipW + chipGap;
   });
+  y = cy + chipH + 40;
+
+  // Details
+  const details = document.getElementById('aDetails').value || (adMode === 'property' ? 'Add key features here.' : 'Add requirements here.');
+  ctx.fillStyle = DETAILS;
+  ctx.font = '400 36px Arial, Helvetica, sans-serif';
+  const footerH = 150;
+  const availableH = H - footerH - y;
+  const maxDetailLines = Math.max(1, Math.floor(availableH / 54));
+  const detailLines = wrapLines(ctx, details, maxWidth, maxDetailLines);
+  detailLines.forEach(line => { ctx.fillText(line, padX, y); y += 54; });
+
+  // Footer
+  const footerY = H - footerH + 30;
+  ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(padX, footerY);
+  ctx.lineTo(W - padX, footerY);
+  ctx.stroke();
+
+  const showCompany = document.getElementById('aShowCompany').checked;
+  const company = document.getElementById('aCompany').value.trim();
+  if(showCompany && company){
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '600 46px Georgia, "Times New Roman", serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(company, padX, footerY + 26);
+  }
+
+  const showPhone = document.getElementById('aShowPhone').checked;
+  const showEmail = document.getElementById('aShowEmail').checked;
+  const phone = document.getElementById('aPhone').value.trim();
+  const email = document.getElementById('aEmail').value.trim();
+  const contactLines = [];
+  if(showPhone && phone) contactLines.push(phone);
+  if(showEmail && email) contactLines.push(email);
+
+  if(contactLines.length){
+    ctx.fillStyle = CONTACT;
+    ctx.font = '400 32px Arial, Helvetica, sans-serif';
+    ctx.textAlign = 'right';
+    let cyy = footerY + 20;
+    contactLines.forEach(line => { ctx.fillText(line, W - padX, cyy); cyy += 40; });
+    ctx.textAlign = 'left';
+  }
+
+  return canvas;
+}
+
+document.getElementById('adDownloadBtn').addEventListener('click', () => {
+  const canvas = drawPosterCanvas(adSize === 'feed' ? 'feed' : 'story');
+  const link = document.createElement('a');
+  const headline = (document.getElementById('aHeadline').value || 'grad-haus-ad').toLowerCase().replace(/[^a-z0-9]+/g,'-');
+  link.download = `${headline}-${adSize}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
 });
 
 document.getElementById('addBtn').addEventListener('click', () => openSheet(null));
@@ -807,7 +1049,7 @@ document.getElementById('list').addEventListener('click', (e) => {
   if(action === 'del') deleteContact(id);
 });
 
-document.getElementById('aContact').value = '07876 135951 · gradhausuk@gmail.com';
+syncToggleStates();
 updatePoster();
 loadContacts();
 </script>
