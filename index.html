@@ -683,6 +683,7 @@
     <div class="tab" data-type="investor" id="tabInvestor">Investors</div>
     <div class="tab" data-type="ads" id="tabAds">Ad Maker</div>
     <div class="tab" data-type="dealpack" id="tabDealPack">Deal Pack</div>
+    <div class="tab" data-type="agreements" id="tabAgreements">Agreements</div>
   </div>
 
   <div class="summary" id="summary"></div>
@@ -953,6 +954,109 @@
     <button class="dp-generate" id="dpGenerateBtn">Generate deal pack (.rtf)</button>
   </div>
 
+  <div class="dp-wrap" id="agrWrap" style="display:none;">
+    <div class="saved-block" id="savedAgrBlock">
+      <p class="saved-label">Saved agreements</p>
+      <div class="saved-strip" id="savedAgrStrip"></div>
+    </div>
+
+    <div class="dp-section">
+      <h3>Parties</h3>
+      <div class="field">
+        <label>Your business (Party A)</label>
+        <input type="text" id="agrPartyA" placeholder="e.g. Grad Haus Ltd" value="Grad Haus Ltd">
+      </div>
+      <div class="field">
+        <label>Other party (Party B)</label>
+        <input type="text" id="agrPartyB" placeholder="e.g. name or company of the other sourcer / introducer">
+      </div>
+      <div class="field">
+        <label>Property / deal reference (optional)</label>
+        <input type="text" id="agrDeal" placeholder="e.g. a specific address, or leave blank for 'any deals introduced'">
+      </div>
+    </div>
+
+    <div class="dp-section">
+      <h3>Agreement type — tick all that apply</h3>
+      <div class="dp-strategy-row">
+        <label class="dp-strategy-chip" id="chipReferral"><input type="checkbox" id="agrReferral"> Referral / Introducer</label>
+        <label class="dp-strategy-chip" id="chipNCNDA"><input type="checkbox" id="agrNCNDA"> Non-Circumvention (NCNDA)</label>
+        <label class="dp-strategy-chip" id="chipPackaging"><input type="checkbox" id="agrPackaging"> Deal Packaging</label>
+      </div>
+    </div>
+
+    <div class="dp-section" id="agrReferralSection" style="display:none;">
+      <span class="tag">REFERRAL / INTRODUCER</span>
+      <div class="sheet-row">
+        <div class="field">
+          <label>Referral fee</label>
+          <input type="text" id="agrRefFee" placeholder="e.g. £500 or 10% of sourcing fee">
+        </div>
+        <div class="field">
+          <label>Payment trigger</label>
+          <input type="text" id="agrRefTrigger" placeholder="e.g. On completion of purchase">
+        </div>
+      </div>
+      <div class="sheet-row">
+        <div class="field">
+          <label>Territory / scope</label>
+          <input type="text" id="agrRefScope" placeholder="e.g. Properties in Greater London">
+        </div>
+        <div class="field">
+          <label>Term</label>
+          <input type="text" id="agrRefTerm" placeholder="e.g. 12 months, renewable">
+        </div>
+      </div>
+    </div>
+
+    <div class="dp-section" id="agrNCNDASection" style="display:none;">
+      <span class="tag">NON-CIRCUMVENTION &amp; NDA</span>
+      <div class="sheet-row">
+        <div class="field">
+          <label>Confidentiality period</label>
+          <input type="text" id="agrConfPeriod" placeholder="e.g. 24 months">
+        </div>
+        <div class="field">
+          <label>Non-circumvention period</label>
+          <input type="text" id="agrCircPeriod" placeholder="e.g. 24 months">
+        </div>
+      </div>
+      <div class="field">
+        <label>Governing jurisdiction</label>
+        <input type="text" id="agrJurisdiction" placeholder="e.g. England and Wales" value="England and Wales">
+      </div>
+    </div>
+
+    <div class="dp-section" id="agrPackagingSection" style="display:none;">
+      <span class="tag">DEAL PACKAGING</span>
+      <div class="sheet-row">
+        <div class="field">
+          <label>Sourcing fee</label>
+          <input type="text" id="agrPackFee" placeholder="e.g. £3,000 or 3% of purchase price">
+        </div>
+        <div class="field">
+          <label>Payment trigger</label>
+          <input type="text" id="agrPackTrigger" placeholder="e.g. On exchange of contracts">
+        </div>
+      </div>
+      <div class="field">
+        <label>Scope of services</label>
+        <textarea id="agrPackScope" placeholder="e.g. Sourcing, initial viewing, deal pack preparation and introduction to the property"></textarea>
+      </div>
+      <div class="field">
+        <label>Cancellation terms</label>
+        <input type="text" id="agrPackCancel" placeholder="e.g. 14 days' written notice">
+      </div>
+    </div>
+
+    <p class="dp-hint">This is a general template for guidance only — it is not legal advice. Have it reviewed by a solicitor before use, since property sourcing agreements carry specific legal and regulatory considerations.</p>
+
+    <div class="save-row">
+      <button id="agrSaveBtn">💾 Save this draft</button>
+    </div>
+    <button class="dp-generate" id="agrGenerateBtn">Generate agreement (.rtf)</button>
+  </div>
+
   <button class="fab" id="addBtn">+ Add contact</button>
 
   <div class="overlay" id="overlay">
@@ -1178,24 +1282,27 @@ async function deleteContact(id){
 
 function setTab(type){
   activeType = type;
-  ['tabLandlord','tabInvestor','tabAds','tabDealPack'].forEach(id => document.getElementById(id).classList.remove('active'));
+  ['tabLandlord','tabInvestor','tabAds','tabDealPack','tabAgreements'].forEach(id => document.getElementById(id).classList.remove('active'));
   const pipelineOn = (type === 'landlord' || type === 'investor');
   document.getElementById('summary').style.display = pipelineOn ? 'flex' : 'none';
   document.getElementById('list').style.display = pipelineOn ? 'flex' : 'none';
   document.getElementById('addBtn').style.display = pipelineOn ? 'block' : 'none';
   document.getElementById('adWrap').style.display = (type === 'ads') ? 'block' : 'none';
   document.getElementById('dpWrap').style.display = (type === 'dealpack') ? 'block' : 'none';
+  document.getElementById('agrWrap').style.display = (type === 'agreements') ? 'block' : 'none';
 
   if(type === 'landlord'){ document.getElementById('tabLandlord').classList.add('active'); render(); }
   if(type === 'investor'){ document.getElementById('tabInvestor').classList.add('active'); render(); }
   if(type === 'ads'){ document.getElementById('tabAds').classList.add('active'); }
   if(type === 'dealpack'){ document.getElementById('tabDealPack').classList.add('active'); }
+  if(type === 'agreements'){ document.getElementById('tabAgreements').classList.add('active'); }
 }
 
 document.getElementById('tabLandlord').addEventListener('click', () => setTab('landlord'));
 document.getElementById('tabInvestor').addEventListener('click', () => setTab('investor'));
 document.getElementById('tabAds').addEventListener('click', () => setTab('ads'));
 document.getElementById('tabDealPack').addEventListener('click', () => setTab('dealpack'));
+document.getElementById('tabAgreements').addEventListener('click', () => setTab('agreements'));
 
 /* --- Ad Maker --- */
 let adMode = 'property'; // 'property' or 'wanted'
@@ -1573,6 +1680,21 @@ dpStrategies.forEach(s => {
   });
 });
 
+/* --- Agreements --- */
+const agrTypes = [
+  {cb: 'agrReferral', chip: 'chipReferral', section: 'agrReferralSection'},
+  {cb: 'agrNCNDA', chip: 'chipNCNDA', section: 'agrNCNDASection'},
+  {cb: 'agrPackaging', chip: 'chipPackaging', section: 'agrPackagingSection'}
+];
+
+agrTypes.forEach(s => {
+  document.getElementById(s.cb).addEventListener('change', () => {
+    const checked = document.getElementById(s.cb).checked;
+    document.getElementById(s.chip).classList.toggle('checked', checked);
+    if(s.section) document.getElementById(s.section).style.display = checked ? 'block' : 'none';
+  });
+});
+
 function dpVal(id){ return document.getElementById(id).value.trim(); }
 
 function rtfEscape(str){
@@ -1584,7 +1706,9 @@ function rtfEscape(str){
     .replace(/[\u201C\u201D]/g, '"')
     .replace(/\u2013/g, '-')
     .replace(/\u2014/g, '--')
-    .replace(/[^\x00-\x7F]/g, ''); // strip remaining non-ASCII to keep RTF safe
+    .replace(/\u00a3/g, "\\'a3")   // £ - byte 0xA3 in cp1252
+    .replace(/\u20ac/g, "\\'80")   // € - byte 0x80 in cp1252
+    .replace(/[^\x00-\x7F]/g, ''); // strip any remaining non-ASCII to keep RTF safe
 }
 
 function rtfPar(text, opts){
@@ -1721,6 +1845,99 @@ document.getElementById('dpGenerateBtn').addEventListener('click', async () => {
   const rtf = buildDealPackRTF();
   downloadRtfString(rtf, dpVal('dpAddress'));
   await upsertDealPackRecord({rtf, generatedAt: new Date().toISOString()});
+});
+
+function buildAgreementRTF(){
+  const partyA = dpVal('agrPartyA') || '[Party A]';
+  const partyB = dpVal('agrPartyB') || '[Party B]';
+  const dealRef = dpVal('agrDeal');
+
+  const typeLabels = [];
+  if(document.getElementById('agrReferral').checked) typeLabels.push('Referral / Introducer');
+  if(document.getElementById('agrNCNDA').checked) typeLabels.push('Non-Circumvention & Confidentiality');
+  if(document.getElementById('agrPackaging').checked) typeLabels.push('Deal Packaging');
+  const typeText = typeLabels.length ? typeLabels.join(' + ') : 'General Agreement';
+
+  const today = new Date();
+  const dateStr = today.toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'});
+
+  let rtf = '{\\rtf1\\ansi\\ansicpg1252\\deff0\\deflang2057';
+  rtf += '{\\fonttbl{\\f0\\froman Georgia;}{\\f1\\fswiss Arial;}}';
+  rtf += '{\\colortbl;\\red28\\green34\\blue48;\\red76\\green96\\blue121;\\red21\\green34\\blue56;\\red193\\green135\\blue60;\\red255\\green255\\blue255;}';
+  rtf += '\\f1\\fs22\\cf1\n';
+
+  // Cover
+  rtf += '\\pard\\sa40 \\b\\fs20\\cf4 AGREEMENT\\b0\\cf1\\par\n';
+  rtf += '\\pard\\sa60 \\b\\fs36\\cf3\\f0 ' + rtfEscape(typeText) + ' Agreement\\b0\\f1\\fs22\\cf1\\par\n';
+  rtf += '\\pard\\sa20 \\cf2 Between ' + rtfEscape(partyA) + ' ("Party A") and ' + rtfEscape(partyB) + ' ("Party B")\\cf1\\par\n';
+  if(dealRef){
+    rtf += '\\pard\\sa20 \\cf2 In relation to: ' + rtfEscape(dealRef) + '\\cf1\\par\n';
+  }
+  rtf += '\\pard\\sa300 \\cf2 Effective date: ' + rtfEscape(dateStr) + '\\cf1\\par\n';
+  rtf += '\\pard\\brdrb\\brdrs\\brdrw20\\brdrcf4\\sa300 \\par\n';
+
+  // Background
+  rtf += rtfSectionHeading('Background');
+  rtf += rtfPar('This Agreement sets out the terms on which Party A and Party B will work together in relation to the introduction, referral and/or sourcing of property opportunities between them, on the basis described below.', {spaceAfter: 120});
+
+  // Referral / Introducer
+  if(document.getElementById('agrReferral').checked){
+    rtf += rtfSectionHeading('Referral / Introducer Terms');
+    rtf += rtfKeyVal('Referral Fee', dpVal('agrRefFee'), 4);
+    rtf += rtfKeyVal('Payment Trigger', dpVal('agrRefTrigger'), 4);
+    rtf += rtfKeyVal('Territory / Scope', dpVal('agrRefScope'), 4);
+    rtf += rtfKeyVal('Term', dpVal('agrRefTerm'), 4);
+    rtf += rtfPar('Where either party introduces a property, landlord, investor or deal opportunity to the other, and that introduction results in a completed transaction, the introducing party shall be entitled to the Referral Fee set out above, payable upon the Payment Trigger.', {spaceBefore: 80, spaceAfter: 120, size: 20});
+  }
+
+  // NCNDA
+  if(document.getElementById('agrNCNDA').checked){
+    rtf += rtfSectionHeading('Non-Circumvention & Confidentiality');
+    rtf += rtfKeyVal('Confidentiality Period', dpVal('agrConfPeriod'), 4);
+    rtf += rtfKeyVal('Non-Circumvention Period', dpVal('agrCircPeriod'), 4);
+    rtf += rtfKeyVal('Governing Jurisdiction', dpVal('agrJurisdiction'), 4);
+    rtf += rtfPar('Each party agrees to keep confidential all information disclosed by the other party in connection with any introduced property, landlord, investor or deal, and not to disclose such information to any third party without prior written consent, for the Confidentiality Period stated above.', {spaceBefore: 80, spaceAfter: 80, size: 20});
+    rtf += rtfPar('Each party further agrees not to circumvent the other by dealing directly with any landlord, investor, agent or other party introduced by the other party, other than through the introducing party and on the agreed terms, for the Non-Circumvention Period stated above.', {spaceAfter: 120, size: 20});
+  }
+
+  // Deal Packaging
+  if(document.getElementById('agrPackaging').checked){
+    rtf += rtfSectionHeading('Deal Packaging Terms');
+    rtf += rtfKeyVal('Sourcing Fee', dpVal('agrPackFee'), 4);
+    rtf += rtfKeyVal('Payment Trigger', dpVal('agrPackTrigger'), 4);
+    rtf += rtfKeyVal('Cancellation Terms', dpVal('agrPackCancel'), 4);
+    if(dpVal('agrPackScope')){
+      rtf += rtfPar('Scope of Services:', {bold: true, color: 4, spaceBefore: 80});
+      rtf += rtfPar(dpVal('agrPackScope'), {spaceAfter: 120, size: 20});
+    }
+  }
+
+  // General terms (always included)
+  rtf += rtfSectionHeading('General Terms');
+  rtf += rtfPar('This Agreement constitutes the entire understanding between the parties in relation to its subject matter and supersedes any prior discussions or agreements, written or oral.', {spaceAfter: 80, size: 20});
+  rtf += rtfPar('This Agreement shall be governed by and construed in accordance with the laws of ' + rtfEscape(dpVal('agrJurisdiction') || 'England and Wales') + '.', {spaceAfter: 120, size: 20});
+
+  // Disclaimer
+  rtf += rtfSectionHeading('Important Note');
+  rtf += rtfPar('This document is a general template provided for guidance only and does not constitute legal advice. Property sourcing and introducer agreements carry specific legal and regulatory considerations. Both parties are strongly advised to have this Agreement reviewed and, where necessary, customised by a qualified solicitor before signing.', {spaceAfter: 200, size: 18, color: 2});
+
+  // Signatures
+  rtf += rtfSectionHeading('Signatures');
+  rtf += '\\pard\\sb200\\sa20 \\b\\cf3 Signed for and on behalf of Party A\\b0\\cf1\\par\n';
+  rtf += rtfPar('Name: ' + rtfEscape(partyA), {spaceAfter: 20, size: 20});
+  rtf += rtfPar('Signature: _______________________     Date: _______________', {spaceAfter: 200, size: 20});
+  rtf += '\\pard\\sb100\\sa20 \\b\\cf3 Signed for and on behalf of Party B\\b0\\cf1\\par\n';
+  rtf += rtfPar('Name: ' + rtfEscape(partyB), {spaceAfter: 20, size: 20});
+  rtf += rtfPar('Signature: _______________________     Date: _______________', {spaceAfter: 40, size: 20});
+
+  rtf += '}';
+  return rtf;
+}
+
+document.getElementById('agrGenerateBtn').addEventListener('click', async () => {
+  const rtf = buildAgreementRTF();
+  downloadRtfString(rtf, (dpVal('agrPartyA') + '-' + dpVal('agrPartyB')) || 'agreement');
+  await upsertAgreementRecord({rtf, generatedAt: new Date().toISOString()});
 });
 
 /* --- Saved designs (Ad Maker) --- */
@@ -1934,11 +2151,128 @@ document.getElementById('savedDpStrip').addEventListener('click', (e) => {
   if(chip){ loadDpRecord(chip.dataset.id); }
 });
 
+/* --- Saved agreements --- */
+const AGR_STORAGE_KEY = 'gradhaus-agreements';
+let savedAgreements = [];
+let currentAgrRecordId = null;
+const AGR_FIELD_IDS = ['agrPartyA','agrPartyB','agrDeal','agrRefFee','agrRefTrigger','agrRefScope','agrRefTerm',
+  'agrConfPeriod','agrCircPeriod','agrJurisdiction','agrPackFee','agrPackTrigger','agrPackScope','agrPackCancel'];
+const AGR_CHECK_IDS = ['agrReferral','agrNCNDA','agrPackaging'];
+
+async function loadSavedAgreements(){
+  try{
+    const res = await window.storage.get(AGR_STORAGE_KEY, false);
+    savedAgreements = res && res.value ? JSON.parse(res.value) : [];
+  }catch(e){ savedAgreements = []; }
+  renderSavedAgrStrip();
+}
+
+async function persistAgreements(){
+  try{ await window.storage.set(AGR_STORAGE_KEY, JSON.stringify(savedAgreements), false); }
+  catch(e){ console.error('Storage error', e); }
+}
+
+function renderSavedAgrStrip(){
+  const block = document.getElementById('savedAgrBlock');
+  const strip = document.getElementById('savedAgrStrip');
+  block.classList.add('has-items');
+  const newChip = `
+    <div class="saved-chip" data-action="new-agr">
+      <span class="name">+ New</span>
+    </div>
+  `;
+  const chips = savedAgreements.map(a => `
+    <div class="saved-chip${a.id === currentAgrRecordId ? ' active' : ''}" data-id="${a.id}" data-action="load-agr">
+      <span class="name">${escapeHtml(a.name)}</span>
+      ${a.rtf ? `<span class="dl" data-action="dl-agr" data-id="${a.id}">⬇</span>` : ''}
+      <span class="del" data-action="del-agr" data-id="${a.id}">✕</span>
+    </div>
+  `).join('');
+  strip.innerHTML = newChip + chips;
+}
+
+function collectAgrFields(){
+  const fields = {};
+  AGR_FIELD_IDS.forEach(fid => { fields[fid] = document.getElementById(fid).value; });
+  AGR_CHECK_IDS.forEach(fid => { fields[fid] = document.getElementById(fid).checked; });
+  return fields;
+}
+
+async function upsertAgreementRecord(extra){
+  const partyB = document.getElementById('agrPartyB').value.trim();
+  const name = partyB ? ('Agreement — ' + partyB) : 'Untitled agreement';
+  const fields = collectAgrFields();
+  const existing = currentAgrRecordId ? savedAgreements.find(a => a.id === currentAgrRecordId) : null;
+  if(existing){
+    Object.assign(existing, fields, {name, savedAt: new Date().toISOString()}, extra || {});
+  }else{
+    const record = Object.assign({id: uid(), name, savedAt: new Date().toISOString()}, fields, extra || {});
+    savedAgreements.unshift(record);
+    currentAgrRecordId = record.id;
+  }
+  await persistAgreements();
+  renderSavedAgrStrip();
+}
+
+async function saveCurrentAgreement(){
+  await upsertAgreementRecord();
+}
+
+function loadAgrRecord(id){
+  const rec = savedAgreements.find(a => a.id === id);
+  if(!rec) return;
+  AGR_FIELD_IDS.forEach(fid => { document.getElementById(fid).value = rec[fid] || ''; });
+  AGR_CHECK_IDS.forEach(fid => {
+    const checked = !!rec[fid];
+    document.getElementById(fid).checked = checked;
+    document.getElementById(fid).dispatchEvent(new Event('change', {bubbles:true}));
+  });
+  currentAgrRecordId = id;
+  renderSavedAgrStrip();
+}
+
+function newAgrDraft(){
+  AGR_FIELD_IDS.forEach(fid => { document.getElementById(fid).value = ''; });
+  AGR_CHECK_IDS.forEach(fid => {
+    document.getElementById(fid).checked = false;
+    document.getElementById(fid).dispatchEvent(new Event('change', {bubbles:true}));
+  });
+  document.getElementById('agrPartyA').value = 'Grad Haus Ltd';
+  document.getElementById('agrJurisdiction').value = 'England and Wales';
+  currentAgrRecordId = null;
+  renderSavedAgrStrip();
+}
+
+async function deleteAgrRecord(id){
+  savedAgreements = savedAgreements.filter(a => a.id !== id);
+  if(currentAgrRecordId === id) currentAgrRecordId = null;
+  await persistAgreements();
+  renderSavedAgrStrip();
+}
+
+document.getElementById('agrSaveBtn').addEventListener('click', saveCurrentAgreement);
+document.getElementById('savedAgrStrip').addEventListener('click', (e) => {
+  const del = e.target.closest('[data-action="del-agr"]');
+  if(del){ e.stopPropagation(); deleteAgrRecord(del.dataset.id); return; }
+  const dl = e.target.closest('[data-action="dl-agr"]');
+  if(dl){
+    e.stopPropagation();
+    const rec = savedAgreements.find(a => a.id === dl.dataset.id);
+    if(rec && rec.rtf) downloadRtfString(rec.rtf, rec.name);
+    return;
+  }
+  const newBtn = e.target.closest('[data-action="new-agr"]');
+  if(newBtn){ newAgrDraft(); return; }
+  const chip = e.target.closest('[data-action="load-agr"]');
+  if(chip){ loadAgrRecord(chip.dataset.id); }
+});
+
 syncToggleStates();
 updatePoster();
 loadContacts();
 loadSavedAds();
 loadSavedDealPacks();
+loadSavedAgreements();
 </script>
 
 </body>
