@@ -60,18 +60,21 @@
     background:var(--paper-card);
     border:1px solid var(--line);
     border-radius:10px;
-    overflow:hidden;
+    overflow-x:auto;
+    overflow-y:hidden;
+    -webkit-overflow-scrolling:touch;
   }
   .tab{
-    flex:1;
+    flex:0 0 auto;
     text-align:center;
-    padding:11px 6px;
+    padding:11px 16px;
     font-size:14px;
     font-weight:600;
     color:var(--slate);
     cursor:pointer;
     border-right:1px solid var(--line);
     transition:background .15s;
+    white-space:nowrap;
   }
   .tab:last-child{border-right:none;}
   .tab.active{
@@ -485,6 +488,164 @@
   }
   .ad-actions .download{background:var(--navy);color:#fff;}
   .ad-actions .reset{background:#fff;border:1px solid var(--line);color:var(--slate);}
+
+  /* --- Deal Pack --- */
+  .dp-wrap{padding:14px 20px 30px;}
+  .dp-section{
+    background:var(--paper-card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:14px 16px;
+    margin-bottom:14px;
+  }
+  .dp-section h3{
+    font-family:'Lora',serif;
+    font-size:15px;
+    margin:0 0 12px;
+    color:var(--navy);
+  }
+  .dp-strategy-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-bottom:4px;
+  }
+  .dp-strategy-chip{
+    flex:1 1 calc(50% - 8px);
+    display:flex;
+    align-items:center;
+    gap:8px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:10px 12px;
+    font-size:13px;
+    font-weight:600;
+    color:var(--navy-soft);
+    cursor:pointer;
+  }
+  .dp-strategy-chip.checked{
+    background:var(--navy);
+    border-color:var(--navy);
+    color:#fff;
+  }
+  .dp-strategy-chip input{
+    width:15px;height:15px;
+    accent-color:var(--amber);
+  }
+  .dp-strategy-section{
+    border-top:1px dashed var(--line);
+    margin-top:12px;
+    padding-top:12px;
+  }
+  .dp-strategy-section .tag{
+    display:inline-block;
+    font-size:11px;
+    font-weight:700;
+    color:var(--amber);
+    background:var(--amber-soft);
+    border-radius:100px;
+    padding:3px 10px;
+    margin-bottom:10px;
+  }
+  .dp-wrap .field{margin-bottom:10px;}
+  .dp-wrap .field label{
+    display:block;
+    font-size:12px;
+    color:var(--slate);
+    margin-bottom:4px;
+    font-weight:600;
+  }
+  .dp-wrap .field input, .dp-wrap .field textarea{
+    width:100%;
+    padding:9px 11px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    font-size:14px;
+    font-family:inherit;
+    background:#fff;
+  }
+  .dp-wrap .field textarea{resize:vertical;min-height:56px;}
+  .dp-wrap .sheet-row{display:flex;gap:10px;}
+  .dp-wrap .sheet-row .field{flex:1;}
+  .dp-generate{
+    width:100%;
+    padding:14px;
+    border-radius:10px;
+    border:none;
+    background:var(--navy);
+    color:#fff;
+    font-size:15px;
+    font-weight:700;
+    font-family:'IBM Plex Sans',sans-serif;
+  }
+  .dp-hint{
+    font-size:12px;
+    color:var(--slate);
+    margin:-4px 0 14px;
+    line-height:1.4;
+  }
+
+  /* --- Saved items strip (Ad Maker + Deal Pack) --- */
+  .saved-block{display:none;}
+  .saved-block.has-items{display:block;}
+  .saved-label{
+    padding:14px 20px 6px;
+    font-size:11px;
+    font-weight:700;
+    color:var(--slate);
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+  }
+  .saved-strip{
+    display:flex;
+    gap:8px;
+    overflow-x:auto;
+    padding:0 20px 4px;
+    -webkit-overflow-scrolling:touch;
+  }
+  .saved-chip{
+    flex:0 0 auto;
+    max-width:220px;
+    background:var(--paper-card);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:8px 10px;
+    font-size:12px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    color:var(--navy-soft);
+    font-weight:600;
+    white-space:nowrap;
+    cursor:pointer;
+  }
+  .saved-chip .name{
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    max-width:150px;
+  }
+  .saved-chip .del{
+    color:var(--rose);
+    font-weight:700;
+    padding:0 2px;
+    flex:0 0 auto;
+  }
+  .save-row{
+    display:flex;
+    gap:10px;
+    padding:0 20px 14px;
+  }
+  .save-row button{
+    flex:1;
+    padding:11px;
+    border-radius:8px;
+    border:1px solid var(--navy);
+    background:#fff;
+    color:var(--navy);
+    font-size:13px;
+    font-weight:700;
+  }
 </style>
 </head>
 <body>
@@ -499,6 +660,7 @@
     <div class="tab active" data-type="landlord" id="tabLandlord">Landlords</div>
     <div class="tab" data-type="investor" id="tabInvestor">Investors</div>
     <div class="tab" data-type="ads" id="tabAds">Ad Maker</div>
+    <div class="tab" data-type="dealpack" id="tabDealPack">Deal Pack</div>
   </div>
 
   <div class="summary" id="summary"></div>
@@ -508,6 +670,11 @@
   </div>
 
   <div class="ad-wrap" id="adWrap" style="display:none;">
+    <div class="saved-block" id="savedAdsBlock">
+      <p class="saved-label">Saved designs</p>
+      <div class="saved-strip" id="savedAdsStrip"></div>
+    </div>
+
     <div class="ad-toggle">
       <button id="adTypeProperty" class="active">Property ad — for investors</button>
     </div>
@@ -580,10 +747,188 @@
       </div>
     </div>
 
+    <div class="save-row">
+      <button id="adSaveBtn">💾 Save this design</button>
+    </div>
     <div class="ad-actions">
       <button class="reset" id="adResetBtn">Clear</button>
       <button class="download" id="adDownloadBtn">Save image</button>
     </div>
+  </div>
+
+  <div class="dp-wrap" id="dpWrap" style="display:none;">
+    <div class="saved-block" id="savedDpBlock">
+      <p class="saved-label">Saved drafts</p>
+      <div class="saved-strip" id="savedDpStrip"></div>
+    </div>
+
+    <div class="dp-section">
+      <h3>Deal overview</h3>
+      <div class="field">
+        <label>Property address / area</label>
+        <input type="text" id="dpAddress" placeholder="e.g. 12 Example Road, Croydon CR0 (or area only if confidential)">
+      </div>
+      <div class="sheet-row">
+        <div class="field">
+          <label>Purchase price</label>
+          <input type="text" id="dpPrice" placeholder="e.g. 320,000">
+        </div>
+        <div class="field">
+          <label>Sourcing fee</label>
+          <input type="text" id="dpFee" placeholder="e.g. 3,000">
+        </div>
+      </div>
+      <div class="field">
+        <label>Target buyer profile</label>
+        <input type="text" id="dpBuyer" placeholder="e.g. Cash buyer, first-time HMO investor">
+      </div>
+    </div>
+
+    <div class="dp-section">
+      <h3>Strategy — tick all that apply</h3>
+      <div class="dp-strategy-row">
+        <label class="dp-strategy-chip" id="chipHMO"><input type="checkbox" id="dpHMO"> HMO</label>
+        <label class="dp-strategy-chip" id="chipR2SA"><input type="checkbox" id="dpR2SA"> R2SA</label>
+        <label class="dp-strategy-chip" id="chipSL"><input type="checkbox" id="dpSL"> Supported Living</label>
+        <label class="dp-strategy-chip" id="chipBTL"><input type="checkbox" id="dpBTL"> BTL / Other</label>
+      </div>
+    </div>
+
+    <div class="dp-section">
+      <h3>Evidence &amp; comparables</h3>
+      <div class="field">
+        <label>Sold comparables (one per line)</label>
+        <textarea id="dpSoldComps" placeholder="e.g. 14 Example Road — £315,000 (Mar 2026)"></textarea>
+      </div>
+      <div class="field">
+        <label>Rental comparables (one per line)</label>
+        <textarea id="dpRentComps" placeholder="e.g. 3-bed HMO, same street — £2,100 pcm"></textarea>
+      </div>
+    </div>
+
+    <div class="dp-section">
+      <h3>Costs &amp; finance</h3>
+      <div class="sheet-row">
+        <div class="field">
+          <label>SDLT</label>
+          <input type="text" id="dpSdlt" placeholder="e.g. 9,500">
+        </div>
+        <div class="field">
+          <label>Legal / broker fees</label>
+          <input type="text" id="dpLegal" placeholder="e.g. 2,000">
+        </div>
+      </div>
+      <div class="sheet-row">
+        <div class="field">
+          <label>Refurb budget (+ contingency)</label>
+          <input type="text" id="dpRefurb" placeholder="e.g. 15,000">
+        </div>
+        <div class="field">
+          <label>Deposit</label>
+          <input type="text" id="dpDeposit" placeholder="e.g. 80,000">
+        </div>
+      </div>
+      <div class="sheet-row">
+        <div class="field">
+          <label>Loan amount</label>
+          <input type="text" id="dpLoan" placeholder="e.g. 240,000">
+        </div>
+        <div class="field">
+          <label>Rate assumption</label>
+          <input type="text" id="dpRate" placeholder="e.g. 6.5%">
+        </div>
+      </div>
+    </div>
+
+    <div class="dp-section" id="dpHMOSection" style="display:none;">
+      <span class="tag">HMO</span>
+      <div class="sheet-row">
+        <div class="field">
+          <label>Article 4 status</label>
+          <input type="text" id="dpArticle4" placeholder="e.g. Not in Article 4 area">
+        </div>
+        <div class="field">
+          <label>Licensing status</label>
+          <input type="text" id="dpLicence" placeholder="e.g. Mandatory HMO licence required">
+        </div>
+      </div>
+      <div class="field">
+        <label>Room-by-room rent (one per line)</label>
+        <textarea id="dpRooms" placeholder="e.g. Room 1 — £600 pcm"></textarea>
+      </div>
+    </div>
+
+    <div class="dp-section" id="dpR2SASection" style="display:none;">
+      <span class="tag">R2SA</span>
+      <div class="sheet-row">
+        <div class="field">
+          <label>Nightly rate assumption</label>
+          <input type="text" id="dpNightly" placeholder="e.g. £120">
+        </div>
+        <div class="field">
+          <label>Occupancy projection</label>
+          <input type="text" id="dpOccupancy" placeholder="e.g. 75%">
+        </div>
+      </div>
+      <div class="field">
+        <label>Monthly running costs (cleaning, bills, OTA fees, mgmt)</label>
+        <input type="text" id="dpRunning" placeholder="e.g. £1,400 pcm">
+      </div>
+    </div>
+
+    <div class="dp-section" id="dpSLSection" style="display:none;">
+      <span class="tag">SUPPORTED LIVING</span>
+      <div class="sheet-row">
+        <div class="field">
+          <label>Referral route / care provider</label>
+          <input type="text" id="dpReferral" placeholder="e.g. Local authority referral">
+        </div>
+        <div class="field">
+          <label>Lease term</label>
+          <input type="text" id="dpLeaseTerm" placeholder="e.g. 5-year lease">
+        </div>
+      </div>
+      <div class="sheet-row">
+        <div class="field">
+          <label>Guaranteed rent?</label>
+          <input type="text" id="dpGuaranteed" placeholder="e.g. Yes — fixed monthly">
+        </div>
+        <div class="field">
+          <label>Rent</label>
+          <input type="text" id="dpSLRent" placeholder="e.g. £2,200 pcm">
+        </div>
+      </div>
+    </div>
+
+    <div class="dp-section">
+      <h3>Returns &amp; exit</h3>
+      <div class="sheet-row">
+        <div class="field">
+          <label>Gross yield</label>
+          <input type="text" id="dpGrossYield" placeholder="e.g. 7.2%">
+        </div>
+        <div class="field">
+          <label>Net yield</label>
+          <input type="text" id="dpNetYield" placeholder="e.g. 5.8%">
+        </div>
+      </div>
+      <div class="sheet-row">
+        <div class="field">
+          <label>Cash-on-cash return</label>
+          <input type="text" id="dpCoC" placeholder="e.g. 11%">
+        </div>
+        <div class="field">
+          <label>Exit strategy</label>
+          <input type="text" id="dpExit" placeholder="e.g. Hold, refinance in 18 months">
+        </div>
+      </div>
+    </div>
+
+    <div class="save-row">
+      <button id="dpSaveBtn">💾 Save this draft</button>
+    </div>
+    <p class="dp-hint">Generates a .rtf file — opens directly in Word with formatting intact, no extra app needed.</p>
+    <button class="dp-generate" id="dpGenerateBtn">Generate deal pack (.rtf)</button>
   </div>
 
   <button class="fab" id="addBtn">+ Add contact</button>
@@ -811,21 +1156,24 @@ async function deleteContact(id){
 
 function setTab(type){
   activeType = type;
-  ['tabLandlord','tabInvestor','tabAds'].forEach(id => document.getElementById(id).classList.remove('active'));
+  ['tabLandlord','tabInvestor','tabAds','tabDealPack'].forEach(id => document.getElementById(id).classList.remove('active'));
   const pipelineOn = (type === 'landlord' || type === 'investor');
   document.getElementById('summary').style.display = pipelineOn ? 'flex' : 'none';
   document.getElementById('list').style.display = pipelineOn ? 'flex' : 'none';
   document.getElementById('addBtn').style.display = pipelineOn ? 'block' : 'none';
-  document.getElementById('adWrap').style.display = pipelineOn ? 'none' : 'block';
+  document.getElementById('adWrap').style.display = (type === 'ads') ? 'block' : 'none';
+  document.getElementById('dpWrap').style.display = (type === 'dealpack') ? 'block' : 'none';
 
   if(type === 'landlord'){ document.getElementById('tabLandlord').classList.add('active'); render(); }
   if(type === 'investor'){ document.getElementById('tabInvestor').classList.add('active'); render(); }
   if(type === 'ads'){ document.getElementById('tabAds').classList.add('active'); }
+  if(type === 'dealpack'){ document.getElementById('tabDealPack').classList.add('active'); }
 }
 
 document.getElementById('tabLandlord').addEventListener('click', () => setTab('landlord'));
 document.getElementById('tabInvestor').addEventListener('click', () => setTab('investor'));
 document.getElementById('tabAds').addEventListener('click', () => setTab('ads'));
+document.getElementById('tabDealPack').addEventListener('click', () => setTab('dealpack'));
 
 /* --- Ad Maker --- */
 let adMode = 'property'; // 'property' or 'wanted'
@@ -1187,9 +1535,337 @@ document.getElementById('list').addEventListener('click', (e) => {
   if(action === 'del') deleteContact(id);
 });
 
+/* --- Deal Pack --- */
+const dpStrategies = [
+  {cb: 'dpHMO', chip: 'chipHMO', section: 'dpHMOSection'},
+  {cb: 'dpR2SA', chip: 'chipR2SA', section: 'dpR2SASection'},
+  {cb: 'dpSL', chip: 'chipSL', section: 'dpSLSection'},
+  {cb: 'dpBTL', chip: 'chipBTL', section: null}
+];
+
+dpStrategies.forEach(s => {
+  document.getElementById(s.cb).addEventListener('change', () => {
+    const checked = document.getElementById(s.cb).checked;
+    document.getElementById(s.chip).classList.toggle('checked', checked);
+    if(s.section) document.getElementById(s.section).style.display = checked ? 'block' : 'none';
+  });
+});
+
+function dpVal(id){ return document.getElementById(id).value.trim(); }
+
+function rtfEscape(str){
+  return (str || '')
+    .replace(/\\/g, '\\\\')
+    .replace(/\{/g, '\\{')
+    .replace(/\}/g, '\\}')
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/\u2013/g, '-')
+    .replace(/\u2014/g, '--')
+    .replace(/[^\x00-\x7F]/g, ''); // strip remaining non-ASCII to keep RTF safe
+}
+
+function rtfPar(text, opts){
+  opts = opts || {};
+  let s = '\\pard';
+  if(opts.spaceBefore) s += '\\sb' + opts.spaceBefore;
+  if(opts.spaceAfter) s += '\\sa' + opts.spaceAfter;
+  s += ' ';
+  if(opts.bold) s += '\\b ';
+  if(opts.color) s += '\\cf' + opts.color + ' ';
+  if(opts.size) s += '\\fs' + opts.size + ' ';
+  s += rtfEscape(text);
+  s += '\\par\n';
+  return s;
+}
+
+function rtfKeyVal(label, value, colorNum){
+  if(!value) return '';
+  return '\\pard\\sb40\\sa40\\tx3200 \\b\\cf' + (colorNum||1) + ' ' + rtfEscape(label) + ':\\tab\\b0\\cf1  ' + rtfEscape(value) + '\\par\n';
+}
+
+function rtfList(label, textareaVal, colorNum){
+  const lines = (textareaVal || '').split('\n').map(l => l.trim()).filter(Boolean);
+  if(!lines.length) return '';
+  let out = '\\pard\\sb60\\sa20 \\b\\cf' + (colorNum||1) + ' ' + rtfEscape(label) + '\\b0\\cf1\\par\n';
+  lines.forEach(line => {
+    out += '\\pard\\sa20\\li300 \\bullet\\tab ' + rtfEscape(line) + '\\par\n';
+  });
+  return out;
+}
+
+function rtfSectionHeading(text){
+  return '\\pard\\sb280\\sa120\\brdrb\\brdrs\\brdrw10\\brdrcf3 \\b\\fs28\\cf3 ' + rtfEscape(text) + '\\b0\\brdrn\\fs22\\cf1\\par\n';
+}
+
+function buildDealPackRTF(){
+  const address = dpVal('dpAddress') || '[Property address / area]';
+  const strategyLabels = [];
+  if(document.getElementById('dpHMO').checked) strategyLabels.push('HMO');
+  if(document.getElementById('dpR2SA').checked) strategyLabels.push('R2SA');
+  if(document.getElementById('dpSL').checked) strategyLabels.push('Supported Living');
+  if(document.getElementById('dpBTL').checked) strategyLabels.push('BTL / Other');
+  const strategyText = strategyLabels.length ? strategyLabels.join(' + ') : 'Investment Opportunity';
+
+  const today = new Date();
+  const dateStr = today.toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'});
+
+  let rtf = '{\\rtf1\\ansi\\ansicpg1252\\deff0\\deflang2057';
+  rtf += '{\\fonttbl{\\f0\\froman Georgia;}{\\f1\\fswiss Arial;}}';
+  // Colour table: 1=black/ink, 2=slate, 3=navy, 4=amber, 5=white
+  rtf += '{\\colortbl;\\red28\\green34\\blue48;\\red76\\green96\\blue121;\\red21\\green34\\blue56;\\red193\\green135\\blue60;\\red255\\green255\\blue255;}';
+  rtf += '\\f1\\fs22\\cf1\n';
+
+  // Cover
+  rtf += '\\pard\\sa40 \\b\\fs20\\cf4 DEAL PACK\\b0\\cf1\\par\n';
+  rtf += '\\pard\\sa60 \\b\\fs40\\cf3\\f0 ' + rtfEscape(address) + '\\b0\\f1\\fs22\\cf1\\par\n';
+  rtf += '\\pard\\sa20 \\cf2 Strategy: ' + rtfEscape(strategyText) + '\\cf1\\par\n';
+  rtf += '\\pard\\sa300 \\cf2 Prepared by Grad Haus  |  ' + rtfEscape(dateStr) + '\\cf1\\par\n';
+  rtf += '\\pard\\brdrb\\brdrs\\brdrw20\\brdrcf4\\sa300 \\par\n';
+
+  // Deal overview
+  rtf += rtfSectionHeading('Deal Overview');
+  rtf += rtfKeyVal('Purchase Price', dpVal('dpPrice') ? ('\u00a3' + dpVal('dpPrice')) : '', 3);
+  rtf += rtfKeyVal('Sourcing Fee', dpVal('dpFee') ? ('\u00a3' + dpVal('dpFee')) : '', 3);
+  rtf += rtfKeyVal('Target Buyer Profile', dpVal('dpBuyer'), 3);
+  rtf += rtfKeyVal('Strategy', strategyText, 3);
+
+  // Evidence
+  if(dpVal('dpSoldComps') || dpVal('dpRentComps')){
+    rtf += rtfSectionHeading('Evidence & Comparables');
+    rtf += rtfList('Sold comparables', dpVal('dpSoldComps'), 3);
+    rtf += rtfList('Rental comparables', dpVal('dpRentComps'), 3);
+  }
+
+  // Costs & finance
+  if(dpVal('dpSdlt') || dpVal('dpLegal') || dpVal('dpRefurb') || dpVal('dpDeposit') || dpVal('dpLoan') || dpVal('dpRate')){
+    rtf += rtfSectionHeading('Costs & Finance');
+    rtf += rtfKeyVal('SDLT', dpVal('dpSdlt') ? ('\u00a3' + dpVal('dpSdlt')) : '', 3);
+    rtf += rtfKeyVal('Legal / Broker Fees', dpVal('dpLegal') ? ('\u00a3' + dpVal('dpLegal')) : '', 3);
+    rtf += rtfKeyVal('Refurb Budget (+ contingency)', dpVal('dpRefurb') ? ('\u00a3' + dpVal('dpRefurb')) : '', 3);
+    rtf += rtfKeyVal('Deposit', dpVal('dpDeposit') ? ('\u00a3' + dpVal('dpDeposit')) : '', 3);
+    rtf += rtfKeyVal('Loan Amount', dpVal('dpLoan') ? ('\u00a3' + dpVal('dpLoan')) : '', 3);
+    rtf += rtfKeyVal('Rate Assumption', dpVal('dpRate'), 3);
+  }
+
+  // HMO section
+  if(document.getElementById('dpHMO').checked){
+    rtf += rtfSectionHeading('HMO Analysis');
+    rtf += rtfKeyVal('Article 4 Status', dpVal('dpArticle4'), 4);
+    rtf += rtfKeyVal('Licensing Status', dpVal('dpLicence'), 4);
+    rtf += rtfList('Room-by-room rent', dpVal('dpRooms'), 4);
+  }
+
+  // R2SA section
+  if(document.getElementById('dpR2SA').checked){
+    rtf += rtfSectionHeading('R2SA Analysis');
+    rtf += rtfKeyVal('Nightly Rate Assumption', dpVal('dpNightly'), 4);
+    rtf += rtfKeyVal('Occupancy Projection', dpVal('dpOccupancy'), 4);
+    rtf += rtfKeyVal('Monthly Running Costs', dpVal('dpRunning'), 4);
+  }
+
+  // Supported Living section
+  if(document.getElementById('dpSL').checked){
+    rtf += rtfSectionHeading('Supported Living Analysis');
+    rtf += rtfKeyVal('Referral Route / Care Provider', dpVal('dpReferral'), 4);
+    rtf += rtfKeyVal('Lease Term', dpVal('dpLeaseTerm'), 4);
+    rtf += rtfKeyVal('Guaranteed Rent', dpVal('dpGuaranteed'), 4);
+    rtf += rtfKeyVal('Rent', dpVal('dpSLRent'), 4);
+  }
+
+  // Returns & exit
+  if(dpVal('dpGrossYield') || dpVal('dpNetYield') || dpVal('dpCoC') || dpVal('dpExit')){
+    rtf += rtfSectionHeading('Returns & Exit');
+    rtf += rtfKeyVal('Gross Yield', dpVal('dpGrossYield'), 3);
+    rtf += rtfKeyVal('Net Yield', dpVal('dpNetYield'), 3);
+    rtf += rtfKeyVal('Cash-on-Cash Return', dpVal('dpCoC'), 3);
+    rtf += rtfKeyVal('Exit Strategy', dpVal('dpExit'), 3);
+  }
+
+  // Disclaimer
+  rtf += rtfSectionHeading('Disclaimer');
+  rtf += rtfPar('This document is provided for consideration purposes only. All figures are estimates and are not guaranteed. Prospective investors should conduct their own due diligence, including independent legal, financial and structural advice, before proceeding.', {spaceAfter: 200, size: 18, color: 2});
+
+  // Footer
+  rtf += '\\pard\\brdrt\\brdrs\\brdrw10\\brdrcf2\\sb200\\sa20 \\par\n';
+  rtf += rtfPar('Grad Haus', {bold: true, color: 3, size: 24, spaceAfter: 20});
+  rtf += rtfPar('07876 135951  |  gradhausuk@gmail.com', {color: 2, size: 18});
+
+  rtf += '}';
+  return rtf;
+}
+
+document.getElementById('dpGenerateBtn').addEventListener('click', () => {
+  const rtf = buildDealPackRTF();
+  const blob = new Blob([rtf], {type: 'application/rtf'});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  const addr = (dpVal('dpAddress') || 'deal-pack').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  link.download = `${addr}-deal-pack.rtf`;
+  link.href = url;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+
+/* --- Saved designs (Ad Maker) --- */
+const ADS_STORAGE_KEY = 'gradhaus-ads';
+let savedAds = [];
+
+async function loadSavedAds(){
+  try{
+    const res = await window.storage.get(ADS_STORAGE_KEY, false);
+    savedAds = res && res.value ? JSON.parse(res.value) : [];
+  }catch(e){ savedAds = []; }
+  renderSavedAdsStrip();
+}
+
+async function persistAds(){
+  try{ await window.storage.set(ADS_STORAGE_KEY, JSON.stringify(savedAds), false); }
+  catch(e){ console.error('Storage error', e); }
+}
+
+function renderSavedAdsStrip(){
+  const block = document.getElementById('savedAdsBlock');
+  const strip = document.getElementById('savedAdsStrip');
+  block.classList.toggle('has-items', savedAds.length > 0);
+  strip.innerHTML = savedAds.map(a => `
+    <div class="saved-chip" data-id="${a.id}" data-action="load-ad">
+      <span class="name">${escapeHtml(a.name)}</span>
+      <span class="del" data-action="del-ad" data-id="${a.id}">✕</span>
+    </div>
+  `).join('');
+}
+
+async function saveCurrentAd(){
+  const name = document.getElementById('aHeadline').value.trim() || (adMode === 'property' ? 'Untitled property ad' : 'Untitled wanted ad');
+  const record = {
+    id: uid(),
+    name,
+    savedAt: new Date().toISOString(),
+    adMode, adSize,
+    aHeadline: document.getElementById('aHeadline').value,
+    aPrice: document.getElementById('aPrice').value,
+    aBeds: document.getElementById('aBeds').value,
+    aType: document.getElementById('aType').value,
+    aDetails: document.getElementById('aDetails').value,
+    aShowCompany: document.getElementById('aShowCompany').checked,
+    aCompany: document.getElementById('aCompany').value,
+    aShowPhone: document.getElementById('aShowPhone').checked,
+    aPhone: document.getElementById('aPhone').value,
+    aShowEmail: document.getElementById('aShowEmail').checked,
+    aEmail: document.getElementById('aEmail').value
+  };
+  savedAds.unshift(record);
+  await persistAds();
+  renderSavedAdsStrip();
+}
+
+function loadAdRecord(id){
+  const rec = savedAds.find(a => a.id === id);
+  if(!rec) return;
+  document.getElementById('aHeadline').value = rec.aHeadline || '';
+  document.getElementById('aPrice').value = rec.aPrice || '';
+  document.getElementById('aBeds').value = rec.aBeds || '';
+  document.getElementById('aType').value = rec.aType || '';
+  document.getElementById('aDetails').value = rec.aDetails || '';
+  document.getElementById('aShowCompany').checked = !!rec.aShowCompany;
+  document.getElementById('aCompany').value = rec.aCompany || '';
+  document.getElementById('aShowPhone').checked = !!rec.aShowPhone;
+  document.getElementById('aPhone').value = rec.aPhone || '';
+  document.getElementById('aShowEmail').checked = !!rec.aShowEmail;
+  document.getElementById('aEmail').value = rec.aEmail || '';
+  syncToggleStates();
+  setAdMode(rec.adMode || 'property');
+  setAdSize(rec.adSize || 'story');
+}
+
+async function deleteAdRecord(id){
+  savedAds = savedAds.filter(a => a.id !== id);
+  await persistAds();
+  renderSavedAdsStrip();
+}
+
+document.getElementById('adSaveBtn').addEventListener('click', saveCurrentAd);
+document.getElementById('savedAdsStrip').addEventListener('click', (e) => {
+  const del = e.target.closest('[data-action="del-ad"]');
+  if(del){ e.stopPropagation(); deleteAdRecord(del.dataset.id); return; }
+  const chip = e.target.closest('[data-action="load-ad"]');
+  if(chip){ loadAdRecord(chip.dataset.id); }
+});
+
+/* --- Saved drafts (Deal Pack) --- */
+const DP_STORAGE_KEY = 'gradhaus-dealpacks';
+let savedDealPacks = [];
+const DP_FIELD_IDS = ['dpAddress','dpPrice','dpFee','dpBuyer','dpSoldComps','dpRentComps','dpSdlt','dpLegal',
+  'dpRefurb','dpDeposit','dpLoan','dpRate','dpArticle4','dpLicence','dpRooms','dpNightly','dpOccupancy',
+  'dpRunning','dpReferral','dpLeaseTerm','dpGuaranteed','dpSLRent','dpGrossYield','dpNetYield','dpCoC','dpExit'];
+const DP_CHECK_IDS = ['dpHMO','dpR2SA','dpSL','dpBTL'];
+
+async function loadSavedDealPacks(){
+  try{
+    const res = await window.storage.get(DP_STORAGE_KEY, false);
+    savedDealPacks = res && res.value ? JSON.parse(res.value) : [];
+  }catch(e){ savedDealPacks = []; }
+  renderSavedDpStrip();
+}
+
+async function persistDealPacks(){
+  try{ await window.storage.set(DP_STORAGE_KEY, JSON.stringify(savedDealPacks), false); }
+  catch(e){ console.error('Storage error', e); }
+}
+
+function renderSavedDpStrip(){
+  const block = document.getElementById('savedDpBlock');
+  const strip = document.getElementById('savedDpStrip');
+  block.classList.toggle('has-items', savedDealPacks.length > 0);
+  strip.innerHTML = savedDealPacks.map(d => `
+    <div class="saved-chip" data-id="${d.id}" data-action="load-dp">
+      <span class="name">${escapeHtml(d.name)}</span>
+      <span class="del" data-action="del-dp" data-id="${d.id}">✕</span>
+    </div>
+  `).join('');
+}
+
+async function saveCurrentDealPack(){
+  const name = document.getElementById('dpAddress').value.trim() || 'Untitled deal pack';
+  const record = {id: uid(), name, savedAt: new Date().toISOString()};
+  DP_FIELD_IDS.forEach(fid => { record[fid] = document.getElementById(fid).value; });
+  DP_CHECK_IDS.forEach(fid => { record[fid] = document.getElementById(fid).checked; });
+  savedDealPacks.unshift(record);
+  await persistDealPacks();
+  renderSavedDpStrip();
+}
+
+function loadDpRecord(id){
+  const rec = savedDealPacks.find(d => d.id === id);
+  if(!rec) return;
+  DP_FIELD_IDS.forEach(fid => { document.getElementById(fid).value = rec[fid] || ''; });
+  DP_CHECK_IDS.forEach(fid => {
+    const checked = !!rec[fid];
+    document.getElementById(fid).checked = checked;
+    document.getElementById(fid).dispatchEvent(new Event('change', {bubbles:true}));
+  });
+}
+
+async function deleteDpRecord(id){
+  savedDealPacks = savedDealPacks.filter(d => d.id !== id);
+  await persistDealPacks();
+  renderSavedDpStrip();
+}
+
+document.getElementById('dpSaveBtn').addEventListener('click', saveCurrentDealPack);
+document.getElementById('savedDpStrip').addEventListener('click', (e) => {
+  const del = e.target.closest('[data-action="del-dp"]');
+  if(del){ e.stopPropagation(); deleteDpRecord(del.dataset.id); return; }
+  const chip = e.target.closest('[data-action="load-dp"]');
+  if(chip){ loadDpRecord(chip.dataset.id); }
+});
+
 syncToggleStates();
 updatePoster();
 loadContacts();
+loadSavedAds();
+loadSavedDealPacks();
 </script>
 
 </body>
