@@ -619,11 +619,33 @@
     white-space:nowrap;
     cursor:pointer;
   }
+  .saved-chip.active{
+    background:var(--navy);
+    border-color:var(--navy);
+    color:#fff;
+  }
+  .saved-chip.active .del{
+    color:#ffb4a8;
+  }
+  .saved-chip[data-action="new-dp"]{
+    border:1.5px dashed var(--amber);
+    color:var(--amber);
+    background:var(--amber-soft);
+  }
   .saved-chip .name{
     overflow:hidden;
     text-overflow:ellipsis;
     white-space:nowrap;
     max-width:150px;
+  }
+  .saved-chip .dl{
+    color:var(--sage);
+    font-weight:700;
+    padding:0 2px;
+    flex:0 0 auto;
+  }
+  .saved-chip.active .dl{
+    color:#a9d4ae;
   }
   .saved-chip .del{
     color:var(--rose);
@@ -1695,16 +1717,10 @@ function buildDealPackRTF(){
   return rtf;
 }
 
-document.getElementById('dpGenerateBtn').addEventListener('click', () => {
+document.getElementById('dpGenerateBtn').addEventListener('click', async () => {
   const rtf = buildDealPackRTF();
-  const blob = new Blob([rtf], {type: 'application/rtf'});
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  const addr = (dpVal('dpAddress') || 'deal-pack').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-  link.download = `${addr}-deal-pack.rtf`;
-  link.href = url;
-  link.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  downloadRtfString(rtf, dpVal('dpAddress'));
+  await upsertDealPackRecord({rtf, generatedAt: new Date().toISOString()});
 });
 
 /* --- Saved designs (Ad Maker) --- */
@@ -1796,6 +1812,7 @@ document.getElementById('savedAdsStrip').addEventListener('click', (e) => {
 /* --- Saved drafts (Deal Pack) --- */
 const DP_STORAGE_KEY = 'gradhaus-dealpacks';
 let savedDealPacks = [];
+let currentDpRecordId = null;
 const DP_FIELD_IDS = ['dpAddress','dpPrice','dpFee','dpBuyer','dpSoldComps','dpRentComps','dpSdlt','dpLegal',
   'dpRefurb','dpDeposit','dpLoan','dpRate','dpArticle4','dpLicence','dpRooms','dpNightly','dpOccupancy',
   'dpRunning','dpReferral','dpLeaseTerm','dpGuaranteed','dpSLRent','dpGrossYield','dpNetYield','dpCoC','dpExit'];
@@ -1817,23 +1834,46 @@ async function persistDealPacks(){
 function renderSavedDpStrip(){
   const block = document.getElementById('savedDpBlock');
   const strip = document.getElementById('savedDpStrip');
-  block.classList.toggle('has-items', savedDealPacks.length > 0);
-  strip.innerHTML = savedDealPacks.map(d => `
-    <div class="saved-chip" data-id="${d.id}" data-action="load-dp">
+  block.classList.add('has-items'); // always show, so "+ New" is reachable even with zero saved drafts
+  const newChip = `
+    <div class="saved-chip" data-action="new-dp">
+      <span class="name">+ New</span>
+    </div>
+  `;
+  const chips = savedDealPacks.map(d => `
+    <div class="saved-chip${d.id === currentDpRecordId ? ' active' : ''}" data-id="${d.id}" data-action="load-dp">
       <span class="name">${escapeHtml(d.name)}</span>
+      ${d.rtf ? `<span class="dl" data-action="dl-dp" data-id="${d.id}">⬇</span>` : ''}
       <span class="del" data-action="del-dp" data-id="${d.id}">✕</span>
     </div>
   `).join('');
+  strip.innerHTML = newChip + chips;
+}
+
+function collectDpFields(){
+  const fields = {};
+  DP_FIELD_IDS.forEach(fid => { fields[fid] = document.getElementById(fid).value; });
+  DP_CHECK_IDS.forEach(fid => { fields[fid] = document.getElementById(fid).checked; });
+  return fields;
+}
+
+async function upsertDealPackRecord(extra){
+  const name = document.getElementById('dpAddress').value.trim() || 'Untitled deal pack';
+  const fields = collectDpFields();
+  const existing = currentDpRecordId ? savedDealPacks.find(d => d.id === currentDpRecordId) : null;
+  if(existing){
+    Object.assign(existing, fields, {name, savedAt: new Date().toISOString()}, extra || {});
+  }else{
+    const record = Object.assign({id: uid(), name, savedAt: new Date().toISOString()}, fields, extra || {});
+    savedDealPacks.unshift(record);
+    currentDpRecordId = record.id;
+  }
+  await persistDealPacks();
+  renderSavedDpStrip();
 }
 
 async function saveCurrentDealPack(){
-  const name = document.getElementById('dpAddress').value.trim() || 'Untitled deal pack';
-  const record = {id: uid(), name, savedAt: new Date().toISOString()};
-  DP_FIELD_IDS.forEach(fid => { record[fid] = document.getElementById(fid).value; });
-  DP_CHECK_IDS.forEach(fid => { record[fid] = document.getElementById(fid).checked; });
-  savedDealPacks.unshift(record);
-  await persistDealPacks();
-  renderSavedDpStrip();
+  await upsertDealPackRecord();
 }
 
 function loadDpRecord(id){
@@ -1845,10 +1885,34 @@ function loadDpRecord(id){
     document.getElementById(fid).checked = checked;
     document.getElementById(fid).dispatchEvent(new Event('change', {bubbles:true}));
   });
+  currentDpRecordId = id;
+  renderSavedDpStrip();
+}
+
+function newDpDraft(){
+  DP_FIELD_IDS.forEach(fid => { document.getElementById(fid).value = ''; });
+  DP_CHECK_IDS.forEach(fid => {
+    document.getElementById(fid).checked = false;
+    document.getElementById(fid).dispatchEvent(new Event('change', {bubbles:true}));
+  });
+  currentDpRecordId = null;
+  renderSavedDpStrip();
+}
+
+function downloadRtfString(rtf, address){
+  const blob = new Blob([rtf], {type: 'application/rtf'});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  const addr = (address || 'deal-pack').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  link.download = `${addr}-deal-pack.rtf`;
+  link.href = url;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 async function deleteDpRecord(id){
   savedDealPacks = savedDealPacks.filter(d => d.id !== id);
+  if(currentDpRecordId === id) currentDpRecordId = null;
   await persistDealPacks();
   renderSavedDpStrip();
 }
@@ -1857,6 +1921,15 @@ document.getElementById('dpSaveBtn').addEventListener('click', saveCurrentDealPa
 document.getElementById('savedDpStrip').addEventListener('click', (e) => {
   const del = e.target.closest('[data-action="del-dp"]');
   if(del){ e.stopPropagation(); deleteDpRecord(del.dataset.id); return; }
+  const dl = e.target.closest('[data-action="dl-dp"]');
+  if(dl){
+    e.stopPropagation();
+    const rec = savedDealPacks.find(d => d.id === dl.dataset.id);
+    if(rec && rec.rtf) downloadRtfString(rec.rtf, rec.name);
+    return;
+  }
+  const newBtn = e.target.closest('[data-action="new-dp"]');
+  if(newBtn){ newDpDraft(); return; }
   const chip = e.target.closest('[data-action="load-dp"]');
   if(chip){ loadDpRecord(chip.dataset.id); }
 });
