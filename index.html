@@ -585,6 +585,94 @@
     line-height:1.4;
   }
 
+  /* --- Deal Analyser --- */
+  .an-strategy-row{
+    display:flex;
+    gap:8px;
+  }
+  .an-strategy-chip{
+    flex:1;
+    text-align:center;
+    padding:12px 6px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    font-size:13px;
+    font-weight:700;
+    color:var(--navy-soft);
+    cursor:pointer;
+  }
+  .an-strategy-chip.active{
+    background:var(--navy);
+    border-color:var(--navy);
+    color:#fff;
+  }
+  .an-calc-btn{
+    width:100%;
+    padding:14px;
+    border-radius:10px;
+    border:none;
+    background:var(--amber);
+    color:var(--navy);
+    font-size:15px;
+    font-weight:700;
+    font-family:'IBM Plex Sans',sans-serif;
+    margin-top:4px;
+  }
+  .an-results{
+    margin-top:14px;
+  }
+  .an-verdict{
+    border-radius:10px;
+    padding:14px 16px;
+    margin-bottom:14px;
+    text-align:center;
+  }
+  .an-verdict .headline{
+    font-family:'Lora',serif;
+    font-size:17px;
+    font-weight:700;
+    margin-bottom:4px;
+  }
+  .an-verdict .sub{
+    font-size:12.5px;
+    line-height:1.4;
+  }
+  .an-verdict.good{background:var(--sage-soft);}
+  .an-verdict.good .headline{color:var(--sage);}
+  .an-verdict.good .sub{color:#3d5a41;}
+  .an-verdict.marginal{background:var(--amber-soft);}
+  .an-verdict.marginal .headline{color:#8a5f22;}
+  .an-verdict.marginal .sub{color:#6b4a1c;}
+  .an-verdict.poor{background:var(--rose-soft);}
+  .an-verdict.poor .headline{color:var(--rose);}
+  .an-verdict.poor .sub{color:#7a3a30;}
+  .an-stats{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  .an-stat{
+    flex:1 1 calc(50% - 10px);
+    background:var(--paper-card);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:10px 12px;
+  }
+  .an-stat .l{font-size:11px;color:var(--slate);font-weight:600;margin-bottom:3px;}
+  .an-stat .v{font-size:17px;font-weight:700;color:var(--navy);font-family:'Lora',serif;}
+  .an-send-btn{
+    width:100%;
+    padding:13px;
+    border-radius:9px;
+    border:1.5px solid var(--navy);
+    background:#fff;
+    color:var(--navy);
+    font-size:14px;
+    font-weight:700;
+    font-family:'IBM Plex Sans',sans-serif;
+    margin-top:14px;
+  }
+
   /* --- Saved items strip (Ad Maker + Deal Pack) --- */
   .saved-block{display:none;}
   .saved-block.has-items{display:block;}
@@ -684,6 +772,7 @@
     <div class="tab" data-type="ads" id="tabAds">Ad Maker</div>
     <div class="tab" data-type="dealpack" id="tabDealPack">Deal Pack</div>
     <div class="tab" data-type="agreements" id="tabAgreements">Agreements</div>
+    <div class="tab" data-type="analyser" id="tabAnalyser">Analyser</div>
   </div>
 
   <div class="summary" id="summary"></div>
@@ -1057,6 +1146,141 @@
     <button class="dp-generate" id="agrGenerateBtn">Generate agreement (.rtf)</button>
   </div>
 
+  <div class="dp-wrap" id="anWrap" style="display:none;">
+
+    <div class="dp-section">
+      <h3>Deal reference</h3>
+      <div class="field">
+        <label>Property address / area</label>
+        <input type="text" id="anAddress" placeholder="e.g. 12 Example Road, Croydon">
+      </div>
+    </div>
+
+    <div class="dp-section">
+      <h3>Strategy</h3>
+      <div class="an-strategy-row">
+        <div class="an-strategy-chip active" data-strategy="brrr" id="anChipBRRR">BRRRR</div>
+        <div class="an-strategy-chip" data-strategy="r2r" id="anChipR2R">Rent to Rent</div>
+        <div class="an-strategy-chip" data-strategy="flip" id="anChipFlip">Refurb & Flip</div>
+      </div>
+    </div>
+
+    <div class="dp-section" id="anBrrrSection">
+      <h3>BRRRR figures</h3>
+      <div class="sheet-row">
+        <div class="field">
+          <label>Purchase price</label>
+          <input type="text" id="anBrrrPrice" placeholder="e.g. 150000">
+        </div>
+        <div class="field">
+          <label>Refurb cost</label>
+          <input type="text" id="anBrrrRefurb" placeholder="e.g. 25000">
+        </div>
+      </div>
+      <div class="sheet-row">
+        <div class="field">
+          <label>Other purchase costs (SDLT, legal)</label>
+          <input type="text" id="anBrrrCosts" placeholder="e.g. 6000">
+        </div>
+        <div class="field">
+          <label>After Repair Value (ARV)</label>
+          <input type="text" id="anBrrrArv" placeholder="e.g. 210000">
+        </div>
+      </div>
+      <div class="sheet-row">
+        <div class="field">
+          <label>Refinance LTV %</label>
+          <input type="text" id="anBrrrLtv" placeholder="e.g. 75">
+        </div>
+        <div class="field">
+          <label>Mortgage rate % (post-refinance)</label>
+          <input type="text" id="anBrrrRate" placeholder="e.g. 6.2">
+        </div>
+      </div>
+      <div class="sheet-row">
+        <div class="field">
+          <label>Monthly rent (post-refurb)</label>
+          <input type="text" id="anBrrrRent" placeholder="e.g. 1250">
+        </div>
+        <div class="field">
+          <label>Other monthly costs (mgmt, insurance, maint.)</label>
+          <input type="text" id="anBrrrOpex" placeholder="e.g. 150">
+        </div>
+      </div>
+    </div>
+
+    <div class="dp-section" id="anR2rSection" style="display:none;">
+      <h3>Rent to Rent figures</h3>
+      <div class="sheet-row">
+        <div class="field">
+          <label>Rent to landlord (monthly)</label>
+          <input type="text" id="anR2rRent" placeholder="e.g. 1550">
+        </div>
+        <div class="field">
+          <label>Setup / furnishing cost (one-off)</label>
+          <input type="text" id="anR2rSetup" placeholder="e.g. 6000">
+        </div>
+      </div>
+      <div class="sheet-row">
+        <div class="field">
+          <label>Projected monthly income</label>
+          <input type="text" id="anR2rIncome" placeholder="e.g. 2600">
+        </div>
+        <div class="field">
+          <label>Monthly running costs (bills, cleaning, mgmt)</label>
+          <input type="text" id="anR2rOpex" placeholder="e.g. 500">
+        </div>
+      </div>
+      <div class="field">
+        <label>Contract length (months)</label>
+        <input type="text" id="anR2rTerm" placeholder="e.g. 36">
+      </div>
+    </div>
+
+    <div class="dp-section" id="anFlipSection" style="display:none;">
+      <h3>Refurb &amp; Flip figures</h3>
+      <div class="sheet-row">
+        <div class="field">
+          <label>Purchase price</label>
+          <input type="text" id="anFlipPrice" placeholder="e.g. 140000">
+        </div>
+        <div class="field">
+          <label>Refurb cost</label>
+          <input type="text" id="anFlipRefurb" placeholder="e.g. 30000">
+        </div>
+      </div>
+      <div class="sheet-row">
+        <div class="field">
+          <label>Purchase costs (SDLT, legal)</label>
+          <input type="text" id="anFlipCosts" placeholder="e.g. 5500">
+        </div>
+        <div class="field">
+          <label>Expected sale price</label>
+          <input type="text" id="anFlipSale" placeholder="e.g. 225000">
+        </div>
+      </div>
+      <div class="sheet-row">
+        <div class="field">
+          <label>Monthly holding cost (interest, tax, utilities)</label>
+          <input type="text" id="anFlipHolding" placeholder="e.g. 700">
+        </div>
+        <div class="field">
+          <label>Hold period (months)</label>
+          <input type="text" id="anFlipMonths" placeholder="e.g. 5">
+        </div>
+      </div>
+      <div class="field">
+        <label>Selling costs (% of sale price)</label>
+        <input type="text" id="anFlipSellPct" placeholder="e.g. 2.5">
+      </div>
+    </div>
+
+    <button class="an-calc-btn" id="anCalcBtn">Calculate</button>
+
+    <div class="an-results" id="anResults" style="display:none;"></div>
+
+  </div>
+
   <button class="fab" id="addBtn">+ Add contact</button>
 
   <div class="overlay" id="overlay">
@@ -1282,7 +1506,7 @@ async function deleteContact(id){
 
 function setTab(type){
   activeType = type;
-  ['tabLandlord','tabInvestor','tabAds','tabDealPack','tabAgreements'].forEach(id => document.getElementById(id).classList.remove('active'));
+  ['tabLandlord','tabInvestor','tabAds','tabDealPack','tabAgreements','tabAnalyser'].forEach(id => document.getElementById(id).classList.remove('active'));
   const pipelineOn = (type === 'landlord' || type === 'investor');
   document.getElementById('summary').style.display = pipelineOn ? 'flex' : 'none';
   document.getElementById('list').style.display = pipelineOn ? 'flex' : 'none';
@@ -1290,12 +1514,14 @@ function setTab(type){
   document.getElementById('adWrap').style.display = (type === 'ads') ? 'block' : 'none';
   document.getElementById('dpWrap').style.display = (type === 'dealpack') ? 'block' : 'none';
   document.getElementById('agrWrap').style.display = (type === 'agreements') ? 'block' : 'none';
+  document.getElementById('anWrap').style.display = (type === 'analyser') ? 'block' : 'none';
 
   if(type === 'landlord'){ document.getElementById('tabLandlord').classList.add('active'); render(); }
   if(type === 'investor'){ document.getElementById('tabInvestor').classList.add('active'); render(); }
   if(type === 'ads'){ document.getElementById('tabAds').classList.add('active'); }
   if(type === 'dealpack'){ document.getElementById('tabDealPack').classList.add('active'); }
   if(type === 'agreements'){ document.getElementById('tabAgreements').classList.add('active'); }
+  if(type === 'analyser'){ document.getElementById('tabAnalyser').classList.add('active'); }
 }
 
 document.getElementById('tabLandlord').addEventListener('click', () => setTab('landlord'));
@@ -1303,6 +1529,7 @@ document.getElementById('tabInvestor').addEventListener('click', () => setTab('i
 document.getElementById('tabAds').addEventListener('click', () => setTab('ads'));
 document.getElementById('tabDealPack').addEventListener('click', () => setTab('dealpack'));
 document.getElementById('tabAgreements').addEventListener('click', () => setTab('agreements'));
+document.getElementById('tabAnalyser').addEventListener('click', () => setTab('analyser'));
 
 /* --- Ad Maker --- */
 let adMode = 'property'; // 'property' or 'wanted'
@@ -1939,6 +2166,231 @@ document.getElementById('agrGenerateBtn').addEventListener('click', async () => 
   downloadRtfString(rtf, (dpVal('agrPartyA') + '-' + dpVal('agrPartyB')) || 'agreement');
   await upsertAgreementRecord({rtf, generatedAt: new Date().toISOString()});
 });
+
+/* --- Deal Analyser --- */
+let anStrategy = 'brrr';
+let anLastResult = null;
+
+function anNum(id){
+  const v = parseFloat((document.getElementById(id).value || '').replace(/[£,%\s]/g, ''));
+  return isNaN(v) ? 0 : v;
+}
+
+function anFmtMoney(n){
+  const rounded = Math.round(n);
+  return '£' + rounded.toLocaleString('en-GB');
+}
+
+function anFmtPct(n){
+  return n.toFixed(1) + '%';
+}
+
+function setAnStrategy(s){
+  anStrategy = s;
+  ['brrr','r2r','flip'].forEach(k => {
+    document.getElementById('anChip' + (k === 'brrr' ? 'BRRR' : k === 'r2r' ? 'R2R' : 'Flip')).classList.toggle('active', k === s);
+  });
+  document.getElementById('anBrrrSection').style.display = (s === 'brrr') ? 'block' : 'none';
+  document.getElementById('anR2rSection').style.display = (s === 'r2r') ? 'block' : 'none';
+  document.getElementById('anFlipSection').style.display = (s === 'flip') ? 'block' : 'none';
+  document.getElementById('anResults').style.display = 'none';
+  anLastResult = null;
+}
+
+document.getElementById('anChipBRRR').addEventListener('click', () => setAnStrategy('brrr'));
+document.getElementById('anChipR2R').addEventListener('click', () => setAnStrategy('r2r'));
+document.getElementById('anChipFlip').addEventListener('click', () => setAnStrategy('flip'));
+
+function calcBrrr(){
+  const price = anNum('anBrrrPrice');
+  const refurb = anNum('anBrrrRefurb');
+  const costs = anNum('anBrrrCosts');
+  const arv = anNum('anBrrrArv');
+  const ltv = anNum('anBrrrLtv');
+  const rate = anNum('anBrrrRate');
+  const rent = anNum('anBrrrRent');
+  const opex = anNum('anBrrrOpex');
+
+  const totalInvested = price + refurb + costs;
+  const refinanceLoan = arv * (ltv / 100);
+  const cashLeftIn = totalInvested - refinanceLoan;
+  const monthlyMortgage = (refinanceLoan * (rate / 100)) / 12;
+  const monthlyCashFlow = rent - monthlyMortgage - opex;
+  const annualCashFlow = monthlyCashFlow * 12;
+  const cashOnCash = cashLeftIn > 0 ? (annualCashFlow / cashLeftIn) * 100 : null;
+
+  let verdict, verdictClass, verdictSub;
+  if(cashLeftIn <= totalInvested * 0.15 && monthlyCashFlow >= 200){
+    verdict = 'Looks like a strong BRRRR';
+    verdictClass = 'good';
+    verdictSub = 'Low cash left in the deal and healthy monthly cash flow — the two things a BRRRR needs to work.';
+  }else if(monthlyCashFlow >= 100 && cashLeftIn <= totalInvested * 0.4){
+    verdict = 'Marginal — worth a closer look';
+    verdictClass = 'marginal';
+    verdictSub = 'Either the cash left in, or the cash flow, is a bit outside typical BRRRR targets. Check your ARV and refinance assumptions.';
+  }else{
+    verdict = 'Below typical BRRRR targets';
+    verdictClass = 'poor';
+    verdictSub = 'Too much cash likely left in the deal, or cash flow is thin. Common guideline: aim for £200+/month and minimal cash left in.';
+  }
+
+  return {
+    verdict, verdictClass, verdictSub,
+    stats: [
+      ['Total cash invested', anFmtMoney(totalInvested)],
+      ['Refinance loan (at ' + ltv + '% LTV)', anFmtMoney(refinanceLoan)],
+      ['Cash left in deal', cashLeftIn <= 0 ? anFmtMoney(0) + ' (cash pulled out)' : anFmtMoney(cashLeftIn)],
+      ['Monthly cash flow', anFmtMoney(monthlyCashFlow)],
+      ['Annual cash flow', anFmtMoney(annualCashFlow)],
+      ['Cash-on-cash return', cashOnCash === null ? 'N/A — no cash left in' : anFmtPct(cashOnCash)]
+    ],
+    dealPack: {
+      price: price ? String(Math.round(price)) : '',
+      grossYield: price ? anFmtPct((rent * 12 / price) * 100) : '',
+      cocReturn: cashOnCash === null ? 'N/A — no cash left in deal' : anFmtPct(cashOnCash),
+      exit: 'BRRRR — refinance at ' + (ltv || '75') + '% LTV to recycle capital, then hold for rental income'
+    }
+  };
+}
+
+function calcR2r(){
+  const rentToLandlord = anNum('anR2rRent');
+  const setup = anNum('anR2rSetup');
+  const income = anNum('anR2rIncome');
+  const opex = anNum('anR2rOpex');
+  const term = anNum('anR2rTerm');
+
+  const monthlyCashFlow = income - rentToLandlord - opex;
+  const annualCashFlow = monthlyCashFlow * 12;
+  const roiOnSetup = setup > 0 ? (annualCashFlow / setup) * 100 : null;
+  const paybackMonths = monthlyCashFlow > 0 ? (setup / monthlyCashFlow) : null;
+  const totalContractProfit = term > 0 ? (monthlyCashFlow * term) - setup : null;
+
+  let verdict, verdictClass, verdictSub;
+  if(monthlyCashFlow >= 500 && paybackMonths !== null && paybackMonths <= 8){
+    verdict = 'Looks like a strong Rent-to-Rent';
+    verdictClass = 'good';
+    verdictSub = 'Solid monthly cash flow with a quick payback on your setup costs.';
+  }else if(monthlyCashFlow >= 250){
+    verdict = 'Marginal — worth a closer look';
+    verdictClass = 'marginal';
+    verdictSub = 'Cash flow is positive but below the commonly used £500/month guideline — check your income and running cost assumptions.';
+  }else{
+    verdict = 'Below typical Rent-to-Rent targets';
+    verdictClass = 'poor';
+    verdictSub = 'Thin or negative cash flow. Common guideline: sourcers typically target £500+/month per property after all running costs.';
+  }
+
+  return {
+    verdict, verdictClass, verdictSub,
+    stats: [
+      ['Monthly cash flow', anFmtMoney(monthlyCashFlow)],
+      ['Annual cash flow', anFmtMoney(annualCashFlow)],
+      ['ROI on setup costs', roiOnSetup === null ? 'N/A' : anFmtPct(roiOnSetup)],
+      ['Payback period', paybackMonths === null ? 'N/A' : paybackMonths.toFixed(1) + ' months'],
+      ['Total profit over contract', totalContractProfit === null ? 'N/A' : anFmtMoney(totalContractProfit)],
+      ['Contract length', term ? term + ' months' : 'N/A']
+    ],
+    dealPack: {
+      price: '',
+      grossYield: rentToLandlord ? anFmtPct((income * 12 / (rentToLandlord * 12)) * 100) : '',
+      cocReturn: roiOnSetup === null ? 'N/A' : anFmtPct(roiOnSetup),
+      exit: 'Rent-to-Rent — hold for ' + (term || 'the') + ' month contract term, cash-flow focused'
+    }
+  };
+}
+
+function calcFlip(){
+  const price = anNum('anFlipPrice');
+  const refurb = anNum('anFlipRefurb');
+  const costs = anNum('anFlipCosts');
+  const sale = anNum('anFlipSale');
+  const holdingMonthly = anNum('anFlipHolding');
+  const months = anNum('anFlipMonths');
+  const sellPct = anNum('anFlipSellPct');
+
+  const totalHolding = holdingMonthly * months;
+  const sellingCosts = sale * (sellPct / 100);
+  const totalCosts = price + refurb + costs + totalHolding + sellingCosts;
+  const grossProfit = sale - totalCosts;
+  const roi = totalCosts > 0 ? (grossProfit / totalCosts) * 100 : null;
+  const profitMargin = sale > 0 ? (grossProfit / sale) * 100 : null;
+
+  let verdict, verdictClass, verdictSub;
+  if(grossProfit >= 20000 && roi !== null && roi >= 20){
+    verdict = 'Looks like a strong flip';
+    verdictClass = 'good';
+    verdictSub = 'Profit and ROI are both above commonly used flip targets.';
+  }else if(grossProfit >= 10000){
+    verdict = 'Marginal — worth a closer look';
+    verdictClass = 'marginal';
+    verdictSub = 'There is profit here, but below the commonly cited £20k / 20% ROI guideline many flippers target. Check your ARV and contingency.';
+  }else{
+    verdict = 'Below typical flip targets';
+    verdictClass = 'poor';
+    verdictSub = 'Thin or negative profit margin. Common guideline: build in a contingency and target £20k+ profit to absorb surprises.';
+  }
+
+  return {
+    verdict, verdictClass, verdictSub,
+    stats: [
+      ['Total costs', anFmtMoney(totalCosts)],
+      ['Expected sale price', anFmtMoney(sale)],
+      ['Gross profit', anFmtMoney(grossProfit)],
+      ['ROI on total costs', roi === null ? 'N/A' : anFmtPct(roi)],
+      ['Profit margin', profitMargin === null ? 'N/A' : anFmtPct(profitMargin)],
+      ['Hold period', months ? months + ' months' : 'N/A']
+    ],
+    dealPack: {
+      price: price ? String(Math.round(price)) : '',
+      grossYield: '',
+      cocReturn: roi === null ? 'N/A' : anFmtPct(roi),
+      exit: 'Refurb & Flip — sell within approx. ' + (months || 'X') + ' months of purchase'
+    }
+  };
+}
+
+function renderAnResults(result){
+  const el = document.getElementById('anResults');
+  el.innerHTML = `
+    <div class="an-verdict ${result.verdictClass}">
+      <div class="headline">${escapeHtml(result.verdict)}</div>
+      <div class="sub">${escapeHtml(result.verdictSub)}</div>
+    </div>
+    <div class="an-stats">
+      ${result.stats.map(([l, v]) => `
+        <div class="an-stat">
+          <div class="l">${escapeHtml(l)}</div>
+          <div class="v">${escapeHtml(String(v))}</div>
+        </div>
+      `).join('')}
+    </div>
+    <button class="an-send-btn" id="anSendToDpBtn">Send figures to Deal Pack →</button>
+  `;
+  el.style.display = 'block';
+  document.getElementById('anSendToDpBtn').addEventListener('click', sendAnalysisToDealPack);
+}
+
+document.getElementById('anCalcBtn').addEventListener('click', () => {
+  let result;
+  if(anStrategy === 'brrr') result = calcBrrr();
+  else if(anStrategy === 'r2r') result = calcR2r();
+  else result = calcFlip();
+  anLastResult = result;
+  renderAnResults(result);
+});
+
+function sendAnalysisToDealPack(){
+  if(!anLastResult) return;
+  const address = dpVal('anAddress');
+  newDpDraft();
+  document.getElementById('dpAddress').value = address;
+  if(anLastResult.dealPack.price) document.getElementById('dpPrice').value = anLastResult.dealPack.price;
+  if(anLastResult.dealPack.grossYield) document.getElementById('dpGrossYield').value = anLastResult.dealPack.grossYield;
+  document.getElementById('dpCoC').value = anLastResult.dealPack.cocReturn;
+  document.getElementById('dpExit').value = anLastResult.dealPack.exit;
+  setTab('dealpack');
+}
 
 /* --- Saved designs (Ad Maker) --- */
 const ADS_STORAGE_KEY = 'gradhaus-ads';
