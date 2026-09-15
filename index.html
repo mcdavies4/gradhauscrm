@@ -1331,6 +1331,70 @@
 </div>
 
 <script>
+/* ============================================================
+   STORAGE LAYER
+   ------------------------------------------------------------
+   The Claude.ai artifact preview provides a `window.storage`
+   API, but that API does NOT exist once this file is deployed
+   to your own domain (Vercel, Cloudflare Pages, etc). Without
+   this fix, every save silently failed on the live site.
+
+   This wraps `window.storage` with a version that:
+   - Always writes to localStorage, which is the correct,
+     standard way for a self-hosted static page with no
+     backend to remember data between visits on the same
+     browser/device.
+   - Also tries the native artifact API if present (harmless
+     no-op if it isn't), so nothing breaks if this file is ever
+     previewed inside Claude.ai again.
+
+   LIMITATION WORTH KNOWING: localStorage is tied to this
+   specific browser on this specific device. Clearing browser
+   data, switching browsers, or moving to a new phone will not
+   carry your saved records with it. For access from multiple
+   devices, a real backend/database would be needed instead —
+   this covers "survives closing the browser" on one device.
+   ============================================================ */
+(function(){
+  const nativeStorage = (typeof window.storage === 'object' && window.storage) ? window.storage : null;
+  const PREFIX = 'gradhaus:';
+
+  function lsGet(key){
+    try {
+      const raw = window.localStorage.getItem(PREFIX + key);
+      return raw === null ? undefined : raw;
+    } catch(e){ return undefined; }
+  }
+  function lsSet(key, value){
+    try { window.localStorage.setItem(PREFIX + key, value); return true; }
+    catch(e){ return false; }
+  }
+
+  window.storage = {
+    get: async (key, shared) => {
+      // Prefer localStorage as the source of truth on a deployed site.
+      const lsVal = lsGet(key);
+      if (lsVal !== undefined) return {key, value: lsVal, shared: !!shared};
+
+      // Fall back to the native artifact API if this ever runs inside claude.ai.
+      if (nativeStorage && typeof nativeStorage.get === 'function') {
+        try {
+          const res = await nativeStorage.get(key, shared);
+          if (res) return res;
+        } catch(e) { /* not available here - that's fine */ }
+      }
+      return null;
+    },
+    set: async (key, value, shared) => {
+      const lsOk = lsSet(key, value);
+      if (nativeStorage && typeof nativeStorage.set === 'function') {
+        try { await nativeStorage.set(key, value, shared); } catch(e) { /* ignore */ }
+      }
+      return lsOk ? {key, value, shared: !!shared} : null;
+    }
+  };
+})();
+
 let activeType = 'landlord';
 let editingId = null;
 let contacts = [];
